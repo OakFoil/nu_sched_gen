@@ -29,7 +29,7 @@ class SchedGenScreen extends ConsumerWidget {
       asyncValue: ref.watch(timeTablesProvider),
       showData: (timeTables) => ListView(
         children:
-            [DisplayText("SchedGenScreen"), CourseSearch()] +
+            [Center(child: DisplayText("SchedGenScreen")), CourseSearch()] +
             coursesCart
                 .map(
                   (courseCode) =>
@@ -42,7 +42,9 @@ class SchedGenScreen extends ConsumerWidget {
                 child: Padding(
                   padding: EdgeInsets.all(30),
                   child: ListView.builder(
-                    prototypeItem: TimeTablePreview(timeTables.first),
+                    prototypeItem: timeTables.isEmpty
+                        ? null
+                        : TimeTablePreview(timeTables.first),
                     itemCount: timeTables.length,
                     itemBuilder: (context, index) => timeTables
                         .map((timeTable) => TimeTablePreview(timeTable))

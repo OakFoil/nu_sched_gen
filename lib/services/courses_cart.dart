@@ -5,13 +5,13 @@ part 'courses_cart.g.dart';
 @Riverpod(keepAlive: true)
 class CoursesCart extends _$CoursesCart {
   @override
-  List<String> build() => [];
+  Set<String> build() => {};
   void addCourse(String courseCode) {
-    state = state.followedBy({courseCode}).toList();
+    state = state.followedBy({courseCode}).toSet();
   }
 
   void removeCourse(String courseCode) {
-    state = state.where((a) => a != courseCode).toList();
+    state = state.where((a) => a != courseCode).toSet();
   }
 
   void clearCourses() {
