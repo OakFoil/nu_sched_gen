@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+import 'package:nu_sched_gen/models/schedule.dart';
 import 'package:nu_sched_gen/models/section.dart';
 import 'package:nu_sched_gen/models/time_table.dart';
 import 'package:nu_sched_gen/services/courses_cart.dart';
@@ -37,6 +39,9 @@ class SchedGenScreen extends ConsumerWidget {
                 )
                 .toList() +
             [
+              TitleText(
+                "Days: ${timeTables.firstOrNull?.schedules.numberOfDays}",
+              ),
               SizedBox(
                 height: 500,
                 child: Padding(
@@ -152,7 +157,7 @@ class SectionPreview extends StatelessWidget {
       children: [
         Card(
           child: TitleText(
-            "${section.courseCode}\n${section.schedules.map((schedule) => "${schedule.day} - ${schedule.start.format(context)} - ${schedule.end.format(context)} - ${schedule.room}\n").join()}",
+            "${section.courseCode}\n${section.schedules.map((schedule) => "${DateFormat.EEEE().format(DateTime(1970, 1, schedule.day))} - ${schedule.start.format(context)} - ${schedule.end.format(context)} - ${schedule.room}\n").join()}",
           ),
         ),
         Divider(),

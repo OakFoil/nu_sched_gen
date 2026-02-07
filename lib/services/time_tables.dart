@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+import 'package:nu_sched_gen/models/schedule.dart';
 import 'package:nu_sched_gen/models/time_table.dart';
 import 'package:nu_sched_gen/services/courses_cart.dart';
 import 'package:nu_sched_gen/services/sections.dart';
@@ -11,9 +13,20 @@ class TimeTables extends _$TimeTables {
   Future<Set<TimeTable>> build() async {
     final coursesCart = ref.watch(coursesCartProvider);
     final sections = await ref.watch(sectionsProvider.future);
-    return TimeTable.allPossibleTimeTables(
+    final Iterable<TimeTable> timeTables = TimeTable.allPossibleTimeTables(
       courseCodes: coursesCart,
       allSections: sections,
-    ).toSet();
+    );
+    final days = timeTables
+        .sortedBy((timeTable) => timeTable.schedules.numberOfDays)
+        .firstOrNull
+        ?.schedules
+        .numberOfDays;
+    return (days == null
+            ? timeTables
+            : timeTables.where(
+                (timeTable) => timeTable.schedules.numberOfDays <= days,
+              ))
+        .toSet();
   }
 }

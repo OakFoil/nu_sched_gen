@@ -60,3 +60,7 @@ class Schedule extends Equatable implements ConflictsWith<Schedule> {
     return true;
   }
 }
+
+extension IterableScheduleUtils on Iterable<Schedule> {
+  int get numberOfDays => map((schedule) => schedule.day).toSet().length;
+}

@@ -2,11 +2,14 @@ import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:nu_sched_gen/conflicts_with.dart';
+import 'package:nu_sched_gen/models/schedule.dart';
 import 'package:nu_sched_gen/models/section.dart';
 
 @immutable
 class TimeTable extends Equatable implements ConflictsWith<TimeTable> {
   final Set<Section> sections;
+  Set<Schedule> get schedules =>
+      sections.map((section) => section.schedules).flattened.toSet();
 
   @override
   List<Object?> get props => [sections];
@@ -20,12 +23,16 @@ class TimeTable extends Equatable implements ConflictsWith<TimeTable> {
   bool conflictsWith(value) => sections.containsConflicts;
 
   static Iterable<TimeTable> allPossibleTimeTables({
-    required Iterable<String> courseCodes,
+    required Set<String> courseCodes,
     required Iterable<Section> allSections,
+    Iterable<Section> registeredSections = const {},
   }) {
+    final allOpenSections = registeredSections.followedBy(
+      allSections.where((section) => section.seatsLeft > 0),
+    );
     final allPossibleSectionsPerCourseCode = courseCodes.map(
       (courseCode) =>
-          allSections.where((section) => section.courseCode == courseCode),
+          allOpenSections.where((section) => section.courseCode == courseCode),
     );
     if (allPossibleSectionsPerCourseCode.isEmpty ||
         allPossibleSectionsPerCourseCode.any(
@@ -38,18 +45,23 @@ class TimeTable extends Equatable implements ConflictsWith<TimeTable> {
           (courseSections) =>
               courseSections.map((section) => TimeTable({section})),
         );
-    return allPossibleTimeTablesPerCourseCode.reduce(
-      (accTimeTables, timeTables) => accTimeTables
-          .map(
-            (accTimeTable) => timeTables
-                .map(
-                  (timeTable) => accTimeTable.conflictsWith(timeTable)
-                      ? null
-                      : accTimeTable.mergeWith(timeTable),
-                )
-                .nonNulls,
-          )
-          .flattened,
-    );
+    return allPossibleTimeTablesPerCourseCode
+        .reduce(
+          (accTimeTables, timeTables) => accTimeTables
+              .map(
+                (accTimeTable) => timeTables
+                    .map(
+                      (timeTable) => accTimeTable.conflictsWith(timeTable)
+                          ? null
+                          : accTimeTable.mergeWith(timeTable),
+                    )
+                    .nonNulls,
+              )
+              .flattened,
+        )
+        .where(
+          (timeTable) =>
+              timeTable.sections.every((section) => section.seatsLeft > 0),
+        );
   }
 }

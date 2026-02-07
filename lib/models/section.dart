@@ -58,9 +58,6 @@ class Section extends Equatable implements ConflictsWith<Section> {
           }
         })
         .flattened
-        .where(
-          (section) =>
-              section.seatsLeft > 0 && !(section.schedules.containsConflicts),
-        );
+        .where((section) => !(section.schedules.containsConflicts));
   }
 }
