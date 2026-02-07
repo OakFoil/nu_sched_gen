@@ -45,7 +45,8 @@ class Schedule extends Equatable implements ConflictsWith<Schedule> {
   }
 
   static int daysListToDay(List<dynamic> value) {
-    final [a] = value;
+    var [a] = value;
+    if (a == 0) a = 7; // Sunday
     return a;
   }
 
