@@ -31,7 +31,7 @@ class SchedGenScreen extends ConsumerWidget {
       asyncValue: ref.watch(timeTablesProvider),
       showData: (timeTables) => ListView(
         children:
-            [Center(child: DisplayText("SchedGenScreen")), CourseSearch()] +
+            [Center(child: DisplayText("Generate Schedules")), CourseSearch()] +
             coursesCart
                 .map(
                   (courseCode) =>
