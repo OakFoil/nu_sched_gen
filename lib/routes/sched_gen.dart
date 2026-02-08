@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:intl/intl.dart';
 import 'package:nu_sched_gen/models/schedule.dart';
 import 'package:nu_sched_gen/models/section.dart';
@@ -29,36 +30,51 @@ class SchedGenScreen extends ConsumerWidget {
     final coursesCart = ref.watch(coursesCartProvider);
     return AsyncValueBuilder(
       asyncValue: ref.watch(timeTablesProvider),
-      showData: (timeTables) => ListView(
-        children:
-            [Center(child: DisplayText("Generate Schedules")), CourseSearch()] +
-            coursesCart
-                .map(
-                  (courseCode) =>
-                      CoursePreview(courseCode: courseCode, onTap: () {}),
-                )
-                .toList() +
-            [
-              TitleText(
-                "Days: ${timeTables.firstOrNull?.schedules.numberOfDays}",
-              ),
-              SizedBox(
-                height: 500,
-                child: Padding(
-                  padding: EdgeInsets.all(30),
-                  child: ListView.builder(
-                    prototypeItem: timeTables.isEmpty
-                        ? null
-                        : TimeTablePreview(timeTables.first),
-                    itemCount: timeTables.length,
-                    itemBuilder: (context, index) => timeTables
-                        .map((timeTable) => TimeTablePreview(timeTable))
-                        .elementAtOrNull(index),
+      showData: (timeTablesa) {
+        final timeTables = {timeTablesa.firstOrNull}.nonNulls;
+        return ListView(
+          children:
+              [
+                Center(child: DisplayText("Generate Schedules")),
+                CourseSearch(),
+              ] +
+              coursesCart
+                  .map(
+                    (courseCode) =>
+                        CoursePreview(courseCode: courseCode, onTap: () {}),
+                  )
+                  .toList() +
+              [
+                TitleText(
+                  "Days: ${timeTables.firstOrNull?.schedules.numberOfDays}",
+                ),
+                TitleText(
+                  "Max Week Day Diff: ${timeTables.map((timeTable) => timeTable.weekDaysDiff.sum).maxOrNull}",
+                ),
+                TitleText(
+                  "Min Start Time: ${timeTables.map((timeTable) => timeTable.schedules.map((schedule) => schedule.start).min).minOrNull?.format(context)}",
+                ),
+                TitleText(
+                  "Max End Time: ${timeTables.map((timeTable) => timeTable.schedules.map((schedule) => schedule.end).max).maxOrNull?.format(context)}",
+                ),
+                SizedBox(
+                  height: 500,
+                  child: Padding(
+                    padding: EdgeInsets.all(30),
+                    child: ListView.builder(
+                      prototypeItem: timeTables.isEmpty
+                          ? null
+                          : TimeTablePreview(timeTables.first),
+                      itemCount: timeTables.length,
+                      itemBuilder: (context, index) => timeTables
+                          .map((timeTable) => TimeTablePreview(timeTable))
+                          .elementAtOrNull(index),
+                    ),
                   ),
                 ),
-              ),
-            ],
-      ),
+              ],
+        );
+      },
     );
   }
 }
@@ -108,11 +124,14 @@ class TimeTablePreview extends StatelessWidget {
   const TimeTablePreview(this.timeTable, {super.key});
 
   @override
-  Widget build(BuildContext context) => Card.outlined(
-    child: Wrap(
-      children: timeTable.sections
-          .map((section) => IntrinsicWidth(child: SectionPreview(section)))
-          .toList(),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 30),
+    child: Card.outlined(
+      child: Wrap(
+        children: timeTable.sections
+            .map((section) => IntrinsicWidth(child: SectionPreview(section)))
+            .toList(),
+      ),
     ),
   );
 }
