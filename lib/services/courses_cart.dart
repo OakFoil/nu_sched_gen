@@ -7,7 +7,7 @@ class CoursesCart extends _$CoursesCart {
   @override
   Set<String> build() => {};
   void addCourse(String courseCode) {
-    state = state.followedBy({courseCode}).toSet();
+    state = state.union({courseCode});
   }
 
   void removeCourse(String courseCode) {

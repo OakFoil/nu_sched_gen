@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:nu_sched_gen/conflicts_with.dart';
 import 'package:nu_sched_gen/models/time_table.dart';
 import 'package:nu_sched_gen/services/courses_cart.dart';
 import 'package:nu_sched_gen/services/sections.dart';
@@ -17,58 +16,44 @@ class TimeTables extends _$TimeTables {
       courseCodes: coursesCart,
       allSections: sections,
     ).toSet();
-    final minDaysLength = timeTables
-        .map((timeTable) => timeTable.days.length)
-        .minOrNull;
-    final Set<TimeTable> timeTablesWithLeastDays = minDaysLength == null
-        ? timeTables
-        : timeTables
-              .where((timeTable) => timeTable.days.length <= minDaysLength)
-              .toSet();
-    final minSumOfWeekDaysDiff = timeTablesWithLeastDays
-        .map((timeTable) => timeTable.weekDaysDiff.sum)
-        .minOrNull;
-    final Set<TimeTable> timeTablesWithLeastDaysAndOrderedDays =
-        minSumOfWeekDaysDiff == null
-        ? timeTablesWithLeastDays
-        : timeTablesWithLeastDays
-              .where(
-                (timeTable) =>
-                    timeTable.weekDaysDiff.sum <= minSumOfWeekDaysDiff,
-              )
-              .toSet();
-    final minEnd = timeTablesWithLeastDaysAndOrderedDays
-        .map(
-          (timeTable) =>
-              timeTable.schedules.map((schedule) => schedule.end).max,
-        )
-        .minOrNull;
-    final Set<TimeTable> timeTablesWithLeastDaysAndOrderedDaysAndMinEnd =
-        minEnd == null
-        ? timeTablesWithLeastDaysAndOrderedDays
-        : timeTablesWithLeastDaysAndOrderedDays
-              .where(
-                (timeTable) => timeTable.schedules.every(
-                  (schedule) => schedule.end.compareTo(minEnd) <= 0,
-                ),
-              )
-              .toSet();
-    final maxStart = timeTablesWithLeastDaysAndOrderedDaysAndMinEnd
-        .map(
-          (timeTable) =>
-              timeTable.schedules.map((schedule) => schedule.start).min,
-        )
-        .maxOrNull;
-    final timeTablesWithLeastDaysAndOrderedDaysAndMinEndAndMaxStart =
-        maxStart == null
-        ? timeTablesWithLeastDaysAndOrderedDaysAndMinEnd
-        : timeTablesWithLeastDaysAndOrderedDaysAndMinEnd.where(
-            (timeTable) => timeTable.schedules.every(
-              (schedule) => schedule.start.compareTo(maxStart) >= 0,
-            ),
-          );
-    return timeTablesWithLeastDaysAndOrderedDaysAndMinEndAndMaxStart
-        .where((timeTable) => !timeTable.schedules.containsConflicts)
-        .toSet();
+    final optimizations = [
+      composeOptimization(
+        (a) => a.minOrNull,
+        (timeTable) => timeTable.days.length,
+      ),
+      composeOptimization(
+        (a) => a.minOrNull,
+        (timeTable) => timeTable.weekDaysDiff.sum,
+      ),
+      composeOptimization(
+        (a) => a.minOrNull,
+        (timeTable) => timeTable.schedules.map((schedule) => schedule.end).max,
+      ),
+      composeOptimization(
+        (a) => a.maxOrNull,
+        (timeTable) =>
+            timeTable.schedules.map((schedule) => schedule.start).min,
+      ),
+    ];
+    final Set<TimeTable> optimizedTimeTables = optimizations.fold(
+      timeTables,
+      (accOptimizedTimeTables, f) => f(accOptimizedTimeTables).toSet(),
+    );
+    return optimizedTimeTables;
   }
 }
+
+Iterable<TimeTable> Function(Iterable<TimeTable>)
+composeOptimization<T extends Comparable<T>>(
+  T? Function(Iterable<T>) minOrMaxOrNull,
+  T Function(TimeTable) getValueToOptimize,
+) => (timeTables) {
+  final optimizedValue = minOrMaxOrNull(
+    timeTables.map((timeTable) => getValueToOptimize(timeTable)),
+  );
+  return optimizedValue == null
+      ? timeTables
+      : timeTables.where(
+          (timeTable) => getValueToOptimize(timeTable) == optimizedValue,
+        );
+};

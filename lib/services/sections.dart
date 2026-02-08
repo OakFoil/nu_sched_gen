@@ -9,6 +9,6 @@ class Sections extends _$Sections {
   @override
   Future<Set<Section>> build() async {
     final slots = await ref.watch(slotsProvider.future);
-    return Section.allPossibleSections(slots).toSet();
+    return Section.allPossibleSections(slots);
   }
 }

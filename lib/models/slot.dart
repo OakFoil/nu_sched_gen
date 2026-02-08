@@ -1,9 +1,11 @@
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:nu_sched_gen/conflicts_with.dart';
 import 'package:nu_sched_gen/models/schedule.dart';
+import 'package:nu_sched_gen/models/section.dart';
 
 part 'slot.g.dart';
 
@@ -56,10 +58,13 @@ class Slot extends Equatable implements ConflictsWith<Slot> {
   factory Slot.fromJson(Map<String, dynamic> json) => _$SlotFromJson(json);
   Map<String, dynamic> toJson() => _$SlotToJson(this);
 
-  Iterable<Slot> matchingSlots(Iterable<Slot> slots) => slots.where(
-    (slot) =>
-        slot.courseCode == courseCode && slot.sectionNumber == sectionNumber,
-  );
+  Set<Slot> matchingSlots(Set<Slot> slots) => slots
+      .where(
+        (slot) =>
+            slot.courseCode == courseCode &&
+            slot.sectionNumber == sectionNumber,
+      )
+      .toSet();
 
   @override
   bool conflictsWith(Slot slot) =>
@@ -67,4 +72,30 @@ class Slot extends Equatable implements ConflictsWith<Slot> {
 
   static Set<String> instructorsToListOfString(List<dynamic>? value) =>
       Set.from(value?.map((a) => a["fullName"]).toSet() ?? {});
+}
+
+extension IterableSlotUtils on Iterable<Slot> {
+  Iterable<Section> allPossibleSectionsForLecture(Slot lecture) {
+    assert(lecture.type == SlotType.Lecture);
+    final matchingSlots = lecture.matchingSlots(toSet());
+    final tutorials = matchingSlots.where((a) => a.type == SlotType.Tutorial);
+    final labs = matchingSlots.where((a) => a.type == SlotType.Lab);
+    if (tutorials.isEmpty && labs.isEmpty) {
+      return {Section(lecture: lecture)};
+    } else if (tutorials.isNotEmpty && labs.isEmpty) {
+      return tutorials.map(
+        (tutotial) => Section(lecture: lecture, tutorial: tutotial),
+      );
+    } else if (tutorials.isEmpty && labs.isNotEmpty) {
+      return labs.map((lab) => Section(lecture: lecture, lab: lab));
+    } else {
+      return tutorials
+          .map(
+            (tutorial) => labs.map(
+              (lab) => Section(lecture: lecture, tutorial: tutorial, lab: lab),
+            ),
+          )
+          .flattened;
+    }
+  }
 }

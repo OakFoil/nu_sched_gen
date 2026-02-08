@@ -1,6 +1,5 @@
 import 'package:collection/collection.dart';
 import 'package:intl/intl.dart';
-import 'package:nu_sched_gen/models/schedule.dart';
 import 'package:nu_sched_gen/models/section.dart';
 import 'package:nu_sched_gen/models/time_table.dart';
 import 'package:nu_sched_gen/services/courses_cart.dart';
@@ -35,7 +34,7 @@ class SchedGenScreen extends ConsumerWidget {
         return ListView(
           children:
               [
-                Center(child: DisplayText("Generate Schedules")),
+                Center(child: DisplayText("Generate Schedule")),
                 CourseSearch(),
               ] +
               coursesCart
@@ -46,10 +45,10 @@ class SchedGenScreen extends ConsumerWidget {
                   .toList() +
               [
                 TitleText(
-                  "Days: ${timeTables.firstOrNull?.schedules.numberOfDays}",
+                  "Days: ${timeTables.map((timeTable) => timeTable.days.length).maxOrNull}",
                 ),
                 TitleText(
-                  "Max Week Day Diff: ${timeTables.map((timeTable) => timeTable.weekDaysDiff.sum).maxOrNull}",
+                  "Week Days Diff: ${timeTables.map((timeTable) => timeTable.weekDaysDiff.sum).maxOrNull}",
                 ),
                 TitleText(
                   "Min Start Time: ${timeTables.map((timeTable) => timeTable.schedules.map((schedule) => schedule.start).min).minOrNull?.format(context)}",

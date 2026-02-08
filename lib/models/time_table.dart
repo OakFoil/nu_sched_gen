@@ -37,43 +37,59 @@ class TimeTable extends Equatable implements ConflictsWith<TimeTable> {
       TimeTable(sections.union(timeTable.sections));
 
   @override
-  bool conflictsWith(value) => sections.containsConflicts;
+  bool conflictsWith(timeTable) =>
+      {sections, timeTable.sections}.flattened.containsConflicts;
 
-  static Iterable<TimeTable> allPossibleTimeTables({
+  static Set<TimeTable> allPossibleTimeTables({
     required Set<String> courseCodes,
-    required Iterable<Section> allSections,
-    Iterable<Section> registeredSections = const {},
+    required Set<Section> allSections,
+    Set<Section> registeredSections = const {},
   }) {
-    final Set<Section> allOpenSections = registeredSections
-        .followedBy(allSections.where((section) => section.seatsLeft > 0))
-        .toSet();
-    final allPossibleSectionsPerCourseCode = courseCodes.map(
-      (courseCode) =>
-          allOpenSections.where((section) => section.courseCode == courseCode),
+    final Set<Section> allOpenSections = registeredSections.union(
+      allSections.where((section) => section.seatsLeft > 0).toSet(),
     );
+    final Set<Set<Section>> allPossibleSectionsPerCourseCode = courseCodes
+        .map(
+          (courseCode) => allOpenSections
+              .where((section) => section.courseCode == courseCode)
+              .toSet(),
+        )
+        .toSet();
     if (allPossibleSectionsPerCourseCode.isEmpty ||
         allPossibleSectionsPerCourseCode.any(
           (courseCodeSections) => courseCodeSections.isEmpty,
         )) {
-      return Iterable.empty();
+      return {};
     }
-    final Iterable<Iterable<TimeTable>> allPossibleTimeTablesPerCourseCode =
-        allPossibleSectionsPerCourseCode.map(
-          (courseSections) =>
-              courseSections.map((section) => TimeTable({section})),
+    final Set<Set<TimeTable>> allPossibleTimeTablesPerCourseCode =
+        allPossibleSectionsPerCourseCode
+            .map(
+              (courseSections) =>
+                  courseSections.map((section) => TimeTable({section})).toSet(),
+            )
+            .toSet();
+    final Set<TimeTable> allPossibleTimeTables =
+        allPossibleTimeTablesPerCourseCode.reduce(
+          (accTimeTables, timeTables) => accTimeTables
+              .map(
+                (accTimeTable) => timeTables.map((timeTable) {
+                  if (accTimeTable.conflictsWith(timeTable)) {
+                    return null;
+                  } else {
+                    final newTimeTable = accTimeTable.mergeWith(timeTable);
+                    assert(!newTimeTable.sections.containsConflicts);
+                    return newTimeTable;
+                  }
+                }).nonNulls,
+              )
+              .flattened
+              .toSet(),
         );
-    return allPossibleTimeTablesPerCourseCode.reduce(
-      (accTimeTables, timeTables) => accTimeTables
-          .map(
-            (accTimeTable) => timeTables
-                .map(
-                  (timeTable) => accTimeTable.conflictsWith(timeTable)
-                      ? null
-                      : accTimeTable.mergeWith(timeTable),
-                )
-                .nonNulls,
-          )
-          .flattened,
+    assert(
+      allPossibleTimeTables.every(
+        (timeTable) => !timeTable.sections.containsConflicts,
+      ),
     );
+    return allPossibleTimeTables;
   }
 }

@@ -12,7 +12,7 @@ class Slots extends _$Slots {
     //TODO final Response(:body) = await get(Uri.parse("https://nu-courses-scraping.ct.ws"),);
     final body = await rootBundle.loadString("assets/json.json");
     final List<dynamic> data = json.decode(body)["data"];
-    final Iterable<Slot> slots = data.map((a) => Slot.fromJson(a));
-    return slots.toSet();
+    final Set<Slot> slots = data.map((a) => Slot.fromJson(a)).toSet();
+    return slots;
   }
 }
