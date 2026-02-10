@@ -10,6 +10,7 @@ import 'package:common/common.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nu_sched_gen/utils.dart';
 
 part 'sched_gen.g.dart';
 
@@ -29,51 +30,45 @@ class SchedGenScreen extends ConsumerWidget {
     final coursesCart = ref.watch(coursesCartProvider);
     return AsyncValueBuilder(
       asyncValue: ref.watch(timeTablesProvider),
-      showData: (timeTablesa) {
-        final timeTables = {timeTablesa.firstOrNull}.nonNulls;
-        return ListView(
-          children:
-              [
-                Center(child: DisplayText("Generate Schedule")),
-                CourseSearch(),
-              ] +
-              coursesCart
-                  .map(
-                    (courseCode) =>
-                        CoursePreview(courseCode: courseCode, onTap: () {}),
-                  )
-                  .toList() +
-              [
-                TitleText(
-                  "Days: ${timeTables.map((timeTable) => timeTable.days.length).maxOrNull}",
-                ),
-                TitleText(
-                  "Week Days Diff: ${timeTables.map((timeTable) => timeTable.weekDaysDiff.sum).maxOrNull}",
-                ),
-                TitleText(
-                  "Min Start Time: ${timeTables.map((timeTable) => timeTable.schedules.map((schedule) => schedule.start).min).minOrNull?.format(context)}",
-                ),
-                TitleText(
-                  "Max End Time: ${timeTables.map((timeTable) => timeTable.schedules.map((schedule) => schedule.end).max).maxOrNull?.format(context)}",
-                ),
-                SizedBox(
-                  height: 500,
-                  child: Padding(
-                    padding: EdgeInsets.all(30),
-                    child: ListView.builder(
-                      prototypeItem: timeTables.isEmpty
-                          ? null
-                          : TimeTablePreview(timeTables.first),
-                      itemCount: timeTables.length,
-                      itemBuilder: (context, index) => timeTables
-                          .map((timeTable) => TimeTablePreview(timeTable))
-                          .elementAtOrNull(index),
-                    ),
+      showData: (timeTables) => ListView(
+        children:
+            [Center(child: DisplayText("Generate Schedule")), CourseSearch()] +
+            coursesCart
+                .map(
+                  (courseCode) =>
+                      CoursePreview(courseCode: courseCode, onTap: () {}),
+                )
+                .toList() +
+            [
+              TitleText(
+                "Days: ${timeTables.map((timeTable) => timeTable.days.length).maxOrNull.toStringOrDash}",
+              ),
+              TitleText(
+                "Week Days Diff: ${timeTables.map((timeTable) => timeTable.weekDaysDiff.sum).maxOrNull.toStringOrDash}",
+              ),
+              TitleText(
+                "Min Start Time: ${(timeTables.map((timeTable) => timeTable.schedules.map((schedule) => schedule.start).min).minOrNull?.format(context)).toStringOrDash}",
+              ),
+              TitleText(
+                "Max End Time: ${(timeTables.map((timeTable) => timeTable.schedules.map((schedule) => schedule.end).max).maxOrNull?.format(context)).toStringOrDash}",
+              ),
+              SizedBox(
+                height: 500,
+                child: Padding(
+                  padding: EdgeInsets.all(30),
+                  child: ListView.builder(
+                    prototypeItem: timeTables.isEmpty
+                        ? null
+                        : TimeTablePreview(timeTables.first),
+                    itemCount: timeTables.length,
+                    itemBuilder: (context, index) => timeTables
+                        .map((timeTable) => TimeTablePreview(timeTable))
+                        .elementAtOrNull(index),
                   ),
                 ),
-              ],
-        );
-      },
+              ),
+            ],
+      ),
     );
   }
 }
