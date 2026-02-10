@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -14,14 +13,16 @@ enum SlotType { Lecture, Tutorial, Lab, Practical, Project, Thesis }
 
 @JsonSerializable()
 @immutable
-class Slot extends Equatable implements ConflictsWith<Slot> {
+class Slot extends ConflictsWith<Slot> {
   @JsonKey(name: "eventSubType")
   final SlotType type;
   @JsonKey(name: "eventId")
   final String courseCode;
   @JsonKey(fromJson: instructorsToListOfString)
   final Set<String> instructors;
-  final Set<Schedule>? schedules;
+  @override
+  @JsonKey(fromJson: nullSchedulesToEmptySchedules)
+  final Set<Schedule> schedules;
   final int seatsLeft;
   @JsonKey(name: "section")
   final String sectionNumberAndLetter;
@@ -46,7 +47,7 @@ class Slot extends Equatable implements ConflictsWith<Slot> {
     sectionNumberAndLetter,
   ];
 
-  const Slot({
+  Slot({
     required this.type,
     required this.courseCode,
     required this.instructors,
@@ -66,12 +67,10 @@ class Slot extends Equatable implements ConflictsWith<Slot> {
       )
       .toSet();
 
-  @override
-  bool conflictsWith(Slot slot) =>
-      [schedules, slot.schedules].nonNulls.flattened.containsConflicts;
-
   static Set<String> instructorsToListOfString(List<dynamic>? value) =>
       Set.from(value?.map((a) => a["fullName"]).toSet() ?? {});
+  static Set<Schedule> nullSchedulesToEmptySchedules(List<dynamic>? values) =>
+      values?.map((value) => Schedule.fromJson(value)).toSet() ?? {};
 }
 
 extension IterableSlotUtils on Iterable<Slot> {

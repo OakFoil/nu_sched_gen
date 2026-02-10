@@ -1,17 +1,13 @@
+import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
+import 'package:nu_sched_gen/models/schedule.dart';
 
-mixin ConflictsWith<T> on Equatable {
-  bool conflictsWith(T value);
-}
-
-extension IterableConflictsWithUtils<T extends ConflictsWith> on Iterable<T> {
-  bool get containsConflicts =>
-      any((a) => any((b) => a != b && a.conflictsWith(b)));
-  Iterable<T> combineIfItDoesntConflict(T value) {
-    final combinationResult = followedBy({value});
-    return combinationResult.containsConflicts ? this : combinationResult;
-  }
-
-  Iterable<T> combineWhileRemovingConflictingItems(Iterable<T> values) =>
-      values.fold(this, (acc, value) => acc.combineIfItDoesntConflict(value));
+@immutable
+abstract class ConflictsWith<T> extends Equatable {
+  Set<Schedule> get schedules;
+  bool conflictsWith(T value) => {
+    this,
+    value as ConflictsWith<T>,
+  }.map((a) => a.schedules).flattened.containsConflicts;
 }

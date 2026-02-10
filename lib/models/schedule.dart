@@ -1,13 +1,13 @@
+import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:nu_sched_gen/conflicts_with.dart';
 
 part 'schedule.g.dart';
 
 @JsonSerializable()
 @immutable
-class Schedule extends Equatable implements ConflictsWith<Schedule> {
+class Schedule extends Equatable {
   @JsonKey(name: "roomId")
   final String room;
   @JsonKey(
@@ -24,6 +24,7 @@ class Schedule extends Equatable implements ConflictsWith<Schedule> {
   final TimeOfDay end;
   @JsonKey(name: "scheduledDays", fromJson: daysListToDay)
   final int day;
+  Set<Schedule> get schedules => {this};
 
   @override
   List<Object?> get props => [room, start, end, day];
@@ -50,7 +51,6 @@ class Schedule extends Equatable implements ConflictsWith<Schedule> {
     return a;
   }
 
-  @override
   bool conflictsWith(Schedule schedule) {
     final Schedule(day: day1, start: start1, end: end1) = this;
     final Schedule(day: day2, start: start2, end: end2) = schedule;
@@ -59,4 +59,30 @@ class Schedule extends Equatable implements ConflictsWith<Schedule> {
     if (start2.compareTo(end1) >= 0) return false;
     return true;
   }
+}
+
+extension IterableScheduleUtils on Iterable<Schedule> {
+  bool get containsConflicts {
+    final Map<int, Set<Schedule>> groupedSchedules = groupSetsBy(
+      (schedule) => schedule.day,
+    );
+    final Iterable<List<Schedule>> groupedAndSortedSchedules = groupedSchedules
+        .values
+        .map((schedules) => schedules.sortedBy((schedule) => schedule.start));
+    return groupedAndSortedSchedules
+        .map((schedulesWithSameDay) {
+          for (var i = 0; i < schedulesWithSameDay.length - 1; i++) {
+            if (schedulesWithSameDay[i].conflictsWith(
+              schedulesWithSameDay[i + 1],
+            )) {
+              return true;
+            }
+          }
+          return false;
+        })
+        .any((a) => a);
+  }
+
+  bool get containsConflictsSlow =>
+      any((a) => any((b) => a != b && a.conflictsWith(b)));
 }

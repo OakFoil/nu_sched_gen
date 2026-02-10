@@ -1,13 +1,13 @@
 import 'package:collection/collection.dart';
-import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:nu_sched_gen/conflicts_with.dart';
 import 'package:nu_sched_gen/models/schedule.dart';
 import 'package:nu_sched_gen/models/section.dart';
 
 @immutable
-class TimeTable extends Equatable implements ConflictsWith<TimeTable> {
+class TimeTable extends ConflictsWith<TimeTable> {
   final Set<Section> sections;
+  @override
   Set<Schedule> get schedules =>
       sections.map((section) => section.schedules).flattened.toSet();
   Set<int> get days => schedules.map((schedule) => schedule.day).toSet();
@@ -31,14 +31,10 @@ class TimeTable extends Equatable implements ConflictsWith<TimeTable> {
   @override
   List<Object?> get props => [sections];
 
-  const TimeTable(this.sections);
+  TimeTable(this.sections);
 
   TimeTable mergeWith(TimeTable timeTable) =>
       TimeTable(sections.union(timeTable.sections));
-
-  @override
-  bool conflictsWith(timeTable) =>
-      {sections, timeTable.sections}.flattened.containsConflicts;
 
   static Set<TimeTable> allPossibleTimeTables({
     required Set<String> courseCodes,
@@ -72,22 +68,23 @@ class TimeTable extends Equatable implements ConflictsWith<TimeTable> {
         allPossibleTimeTablesPerCourseCode.reduce(
           (accTimeTables, timeTables) => accTimeTables
               .map(
-                (accTimeTable) => timeTables.map((timeTable) {
-                  if (accTimeTable.conflictsWith(timeTable)) {
-                    return null;
-                  } else {
-                    final newTimeTable = accTimeTable.mergeWith(timeTable);
-                    assert(!newTimeTable.sections.containsConflicts);
-                    return newTimeTable;
-                  }
-                }).nonNulls,
+                (accTimeTable) => timeTables
+                    .whereNot(
+                      (timeTable) => accTimeTable.conflictsWith(timeTable),
+                    )
+                    .map((timeTable) => accTimeTable.mergeWith(timeTable)),
               )
               .flattened
               .toSet(),
         );
     assert(
       allPossibleTimeTables.every(
-        (timeTable) => !timeTable.sections.containsConflicts,
+        (timeTable) =>
+            setEquals(
+              timeTable.sections.map((section) => section.courseCode).toSet(),
+              courseCodes,
+            ) &&
+            !timeTable.schedules.containsConflictsSlow,
       ),
     );
     return allPossibleTimeTables;

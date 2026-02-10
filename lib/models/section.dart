@@ -1,7 +1,6 @@
 import 'dart:collection';
 
 import 'package:collection/collection.dart';
-import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nu_sched_gen/conflicts_with.dart';
@@ -9,28 +8,25 @@ import 'package:nu_sched_gen/models/schedule.dart';
 import 'package:nu_sched_gen/models/slot.dart';
 
 @immutable
-class Section extends Equatable implements ConflictsWith<Section> {
+class Section extends ConflictsWith<Section> {
   final Slot lecture;
   final Slot? tutorial, lab;
   Set<Slot> get slots => [lecture, tutorial, lab].nonNulls.toSet();
   String get courseCode => lecture.courseCode;
   int get sectionNumber => lecture.sectionNumber;
-  Set<Schedule> get schedules => [
+  @override
+  Set<Schedule> get schedules => {
     lecture.schedules,
     tutorial?.schedules,
     lab?.schedules,
-  ].nonNulls.flattened.toSet();
+  }.nonNulls.flattened.toSet();
   int get seatsLeft =>
       [lecture.seatsLeft, tutorial?.seatsLeft, lab?.seatsLeft].nonNulls.min;
 
   @override
   List<Object?> get props => [lecture, tutorial, lab];
 
-  const Section({required this.lecture, this.tutorial, this.lab});
-
-  @override
-  bool conflictsWith(Section section) =>
-      schedules.union(section.schedules).containsConflicts;
+  Section({required this.lecture, this.tutorial, this.lab});
 
   static Set<Section> allPossibleSections(Set<Slot> slots) {
     final lectures = slots.where((a) => a.type == SlotType.Lecture);
