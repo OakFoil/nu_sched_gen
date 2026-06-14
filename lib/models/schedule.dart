@@ -24,8 +24,8 @@ class Schedule extends Equatable {
   final TimeOfDay end;
   @JsonKey(name: "scheduledDays", fromJson: daysListToDay)
   final int day;
-  Set<Schedule> get schedules => {this};
 
+  Set<Schedule> get schedules => {this};
   @override
   List<Object?> get props => [room, start, end, day];
 
@@ -54,6 +54,7 @@ class Schedule extends Equatable {
   bool conflictsWith(Schedule schedule) {
     final Schedule(day: day1, start: start1, end: end1) = this;
     final Schedule(day: day2, start: start2, end: end2) = schedule;
+
     if (day1 != day2) return false;
     if (start1.compareTo(end2) >= 0) return false;
     if (start2.compareTo(end1) >= 0) return false;
@@ -69,6 +70,7 @@ extension IterableScheduleUtils on Iterable<Schedule> {
     final Iterable<List<Schedule>> groupedAndSortedSchedules = groupedSchedules
         .values
         .map((schedules) => schedules.sortedBy((schedule) => schedule.start));
+
     return groupedAndSortedSchedules
         .map((schedulesWithSameDay) {
           for (var i = 0; i < schedulesWithSameDay.length - 1; i++) {

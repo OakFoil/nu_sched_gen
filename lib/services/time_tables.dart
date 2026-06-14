@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:nu_sched_gen/models/section.dart';
 import 'package:nu_sched_gen/models/time_table.dart';
 import 'package:nu_sched_gen/services/courses_cart.dart';
 import 'package:nu_sched_gen/services/sections.dart';
@@ -11,11 +12,17 @@ class TimeTables extends _$TimeTables {
   @override
   Future<Set<TimeTable>> build() async {
     final coursesCart = ref.watch(coursesCartProvider);
-    final sections = await ref.watch(sectionsProvider.future);
+    final allSectionsPerCourseCode = await ref.watch(sectionsProvider.future);
+    final Map<String, Set<Section>> sectionsPerCourseCode = Map.from(
+      allSectionsPerCourseCode,
+    );
+    sectionsPerCourseCode.removeWhere(
+      (courseCode, sections) => !coursesCart.contains(courseCode),
+    );
     final Set<TimeTable> timeTables = TimeTable.allPossibleTimeTables(
-      courseCodes: coursesCart,
-      allSections: sections,
-    ).toSet();
+      sectionsPerCourseCode: sectionsPerCourseCode,
+    );
+
     final optimizations = [
       composeOptimization(
         (a) => a.minOrNull,
@@ -27,12 +34,11 @@ class TimeTables extends _$TimeTables {
       ),
       composeOptimization(
         (a) => a.minOrNull,
-        (timeTable) => timeTable.schedules.map((schedule) => schedule.end).max,
+        (timeTable) => timeTable.maxDayEnd,
       ),
       composeOptimization(
         (a) => a.maxOrNull,
-        (timeTable) =>
-            timeTable.schedules.map((schedule) => schedule.start).min,
+        (timeTable) => timeTable.minDayStart,
       ),
     ];
     final Set<TimeTable> optimizedTimeTables = optimizations.fold(

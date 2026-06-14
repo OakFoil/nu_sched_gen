@@ -7,8 +7,9 @@ part 'sections.g.dart';
 @Riverpod(keepAlive: true)
 class Sections extends _$Sections {
   @override
-  Future<Set<Section>> build() async {
+  Future<Map<String, Set<Section>>> build() async {
     final slots = await ref.watch(slotsProvider.future);
-    return Section.allPossibleSections(slots);
+
+    return Section.allSectionsPerCourseCode(slots);
   }
 }

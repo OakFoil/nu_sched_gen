@@ -47,10 +47,10 @@ class SchedGenScreen extends ConsumerWidget {
                 "Week Days Diff: ${timeTables.map((timeTable) => timeTable.weekDaysDiff.sum).maxOrNull.toStringOrDash}",
               ),
               TitleText(
-                "Min Start Time: ${(timeTables.map((timeTable) => timeTable.schedules.map((schedule) => schedule.start).min).minOrNull?.format(context)).toStringOrDash}",
+                "Min Start Time: ${(timeTables.map((timeTable) => timeTable.minDayStart).minOrNull?.format(context)).toStringOrDash}",
               ),
               TitleText(
-                "Max End Time: ${(timeTables.map((timeTable) => timeTable.schedules.map((schedule) => schedule.end).max).maxOrNull?.format(context)).toStringOrDash}",
+                "Max End Time: ${(timeTables.map((timeTable) => timeTable.maxDayEnd).maxOrNull?.format(context)).toStringOrDash}",
               ),
               SizedBox(
                 height: 500,

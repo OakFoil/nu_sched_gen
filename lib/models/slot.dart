@@ -1,10 +1,8 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:nu_sched_gen/conflicts_with.dart';
 import 'package:nu_sched_gen/models/schedule.dart';
-import 'package:nu_sched_gen/models/section.dart';
 
 part 'slot.g.dart';
 
@@ -26,16 +24,6 @@ class Slot extends ConflictsWith<Slot> {
   final int seatsLeft;
   @JsonKey(name: "section")
   final String sectionNumberAndLetter;
-  int get sectionNumber => int.parse(
-    sectionNumberAndLetter
-        .split('')
-        .takeWhile((a) => int.tryParse(a) != null)
-        .join(),
-  );
-  String get sectionLetter => sectionNumberAndLetter
-      .split('')
-      .skipWhile((a) => int.tryParse(a) != null)
-      .join();
 
   @override
   List<Object?> get props => [
@@ -56,6 +44,17 @@ class Slot extends ConflictsWith<Slot> {
     required this.sectionNumberAndLetter,
   });
 
+  int get sectionNumber => int.parse(
+    sectionNumberAndLetter
+        .split('')
+        .takeWhile((a) => int.tryParse(a) != null)
+        .join(),
+  );
+  String get sectionLetter => sectionNumberAndLetter
+      .split('')
+      .skipWhile((a) => int.tryParse(a) != null)
+      .join();
+
   factory Slot.fromJson(Map<String, dynamic> json) => _$SlotFromJson(json);
   Map<String, dynamic> toJson() => _$SlotToJson(this);
 
@@ -71,30 +70,4 @@ class Slot extends ConflictsWith<Slot> {
       Set.from(value?.map((a) => a["fullName"]).toSet() ?? {});
   static Set<Schedule> nullSchedulesToEmptySchedules(List<dynamic>? values) =>
       values?.map((value) => Schedule.fromJson(value)).toSet() ?? {};
-}
-
-extension IterableSlotUtils on Iterable<Slot> {
-  Iterable<Section> allPossibleSectionsForLecture(Slot lecture) {
-    assert(lecture.type == SlotType.Lecture);
-    final matchingSlots = lecture.matchingSlots(toSet());
-    final tutorials = matchingSlots.where((a) => a.type == SlotType.Tutorial);
-    final labs = matchingSlots.where((a) => a.type == SlotType.Lab);
-    if (tutorials.isEmpty && labs.isEmpty) {
-      return {Section(lecture: lecture)};
-    } else if (tutorials.isNotEmpty && labs.isEmpty) {
-      return tutorials.map(
-        (tutotial) => Section(lecture: lecture, tutorial: tutotial),
-      );
-    } else if (tutorials.isEmpty && labs.isNotEmpty) {
-      return labs.map((lab) => Section(lecture: lecture, lab: lab));
-    } else {
-      return tutorials
-          .map(
-            (tutorial) => labs.map(
-              (lab) => Section(lecture: lecture, tutorial: tutorial, lab: lab),
-            ),
-          )
-          .flattened;
-    }
-  }
 }
