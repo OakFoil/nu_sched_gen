@@ -3,7 +3,6 @@ import 'package:nu_sched_gen/routes/sched_gen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nu_sched_gen/routes/home.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -26,7 +25,6 @@ class _PageState extends State<Page> {
   Widget build(BuildContext context) => SafeArea(
     child: AdaptiveScaffold(
       destinations: const [
-        NavigationDestination(icon: Icon(Icons.home), label: "Home"),
         NavigationDestination(
           icon: Icon(Icons.calendar_month),
           label: "Generate Schedule",
@@ -42,7 +40,7 @@ class _PageState extends State<Page> {
   );
 }
 
-List<String> indexToPath = ["/", "/generate-schedule", "/about"];
+List<String> indexToPath = ["/", "/about"];
 Map<String, int> pathToIndex = {
   for (final (index, page) in indexToPath.indexed) page: index,
 };
@@ -52,7 +50,7 @@ var routerConfig = GoRouter(
     ShellRoute(
       navigatorKey: navigatorKey,
       builder: (context, state, child) => Page(child: child),
-      routes: [$homeRoute, $aboutRoute, $schedGenRoute],
+      routes: [$schedGenRoute, $aboutRoute],
     ),
   ],
 );
