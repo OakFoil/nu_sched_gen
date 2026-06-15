@@ -28,47 +28,83 @@ class SchedGenScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final coursesCart = ref.watch(coursesCartProvider);
+
     return AsyncValueBuilder(
       asyncValue: ref.watch(timeTablesProvider),
-      showData: (timeTables) => ListView(
-        children:
-            [Center(child: DisplayText("Generate Schedule")), CourseSearch()] +
-            coursesCart
-                .map(
-                  (courseCode) =>
-                      CoursePreview(courseCode: courseCode, onTap: () {}),
-                )
-                .toList() +
-            [
-              TitleText(
-                "Days: ${timeTables.map((timeTable) => timeTable.days.length).maxOrNull.toStringOrDash}",
-              ),
-              TitleText(
-                "Week Days Diff: ${timeTables.map((timeTable) => timeTable.weekDaysDiff.sum).maxOrNull.toStringOrDash}",
-              ),
-              TitleText(
-                "Min Start Time: ${(timeTables.map((timeTable) => timeTable.minDayStart).minOrNull?.format(context)).toStringOrDash}",
-              ),
-              TitleText(
-                "Max End Time: ${(timeTables.map((timeTable) => timeTable.maxDayEnd).maxOrNull?.format(context)).toStringOrDash}",
-              ),
-              SizedBox(
-                height: 500,
-                child: Padding(
-                  padding: EdgeInsets.all(30),
+      showData: (timeTables) {
+        final orderedTimeTables = timeTables.toList();
+
+        return ListView(
+          children:
+              [
+                Center(child: DisplayText("Generate Schedule")),
+                CourseSearch(),
+              ] +
+              coursesCart
+                  .sorted()
+                  .map(
+                    (courseCode) =>
+                        CoursePreview(courseCode: courseCode, onTap: () {}),
+                  )
+                  .toList() +
+              [
+                Divider(),
+                Row(
+                  spacing: 16,
+                  children: [
+                    Column(
+                      spacing: 16,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        "Days:",
+                        "Week Days Diff:",
+                        "Min Start Time:",
+                        "Max End Time:",
+                      ].map((text) => TitleText(text)).toList(),
+                    ),
+                    Column(
+                      spacing: 16,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        orderedTimeTables
+                            .map((timeTable) => timeTable.days.length)
+                            .maxOrNull
+                            .toStringOrDash,
+                        orderedTimeTables
+                            .map((timeTable) => timeTable.weekDaysDiff.sum)
+                            .maxOrNull
+                            .toStringOrDash,
+                        (orderedTimeTables
+                                .map((timeTable) => timeTable.minDayStart)
+                                .minOrNull
+                                ?.format(context))
+                            .toStringOrDash,
+                        (orderedTimeTables
+                                .map((timeTable) => timeTable.maxDayEnd)
+                                .maxOrNull
+                                ?.format(context))
+                            .toStringOrDash,
+                      ].map((text) => TitleText(text)).toList(),
+                    ),
+                  ],
+                ),
+                Divider(),
+                SizedBox(
+                  height: 500,
                   child: ListView.builder(
                     prototypeItem: timeTables.isEmpty
                         ? null
                         : TimeTablePreview(timeTables.first),
                     itemCount: timeTables.length,
-                    itemBuilder: (context, index) => timeTables
-                        .map((timeTable) => TimeTablePreview(timeTable))
-                        .elementAtOrNull(index),
+                    itemBuilder: (context, index) =>
+                        timeTables.elementAtOrNull(index) == null
+                        ? null
+                        : TimeTablePreview(timeTables.elementAt(index)),
                   ),
                 ),
-              ),
-            ],
-      ),
+              ],
+        );
+      },
     );
   }
 }
@@ -144,6 +180,7 @@ class CoursePreview extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(coursesCartProvider);
     final coursesCart = ref.watch(coursesCartProvider.notifier);
+
     return ListTile(
       title: TitleText(courseCode),
       onTap: onTap,
@@ -164,22 +201,77 @@ class SectionPreview extends StatelessWidget {
   const SectionPreview(this.section, {super.key});
 
   @override
-  Widget build(BuildContext context) => Card.outlined(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Card(
-          child: TitleText(
-            "${section.courseCode}\n${section.schedules.map((schedule) => "${DateFormat.EEEE().format(DateTime(1970, 1, schedule.day))} - ${schedule.start.format(context)} - ${schedule.end.format(context)} - ${schedule.room}\n").join()}",
-          ),
+  Widget build(BuildContext context) {
+    final orderedSchedules = section.schedules.sorted();
+
+    return Card.outlined(
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          spacing: 16,
+          children: [
+            TitleText(section.courseCode),
+            Row(
+              spacing: 16,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 16,
+                  children: orderedSchedules
+                      .map(
+                        (schedule) => TitleText(
+                          DateFormat.EEEE().format(
+                            DateTime(1970, 1, schedule.day),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 16,
+                  children: orderedSchedules
+                      .map(
+                        (schedule) => TitleText(schedule.start.format(context)),
+                      )
+                      .toList(),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 16,
+                  children: orderedSchedules
+                      .map(
+                        (schedule) => TitleText(schedule.end.format(context)),
+                      )
+                      .toList(),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 16,
+                  children: orderedSchedules
+                      .map((schedule) => TitleText(schedule.room))
+                      .toList(),
+                ),
+              ],
+            ),
+            Divider(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              spacing: 16,
+              children: [
+                section.sectionNumber.toString(),
+                "-",
+                (section.tutorial?.sectionLetter).toString(),
+                "-",
+                (section.lab?.sectionLetter).toString(),
+              ].map((text) => TitleText(text)).toList(),
+            ),
+            // TitleText(
+            //   "${section.sectionNumber} - ${section.tutorial?.sectionLetter} - ${section.lab?.sectionLetter}",
+            // ),
+          ],
         ),
-        Divider(),
-        Card.filled(
-          child: TitleText(
-            "${section.sectionNumber} - ${section.tutorial?.sectionLetter} - ${section.lab?.sectionLetter}",
-          ),
-        ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
 }

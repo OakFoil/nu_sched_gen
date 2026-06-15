@@ -7,7 +7,7 @@ part 'schedule.g.dart';
 
 @JsonSerializable()
 @immutable
-class Schedule extends Equatable {
+class Schedule extends Equatable implements Comparable<Schedule> {
   @JsonKey(name: "roomId")
   final String room;
   @JsonKey(
@@ -48,6 +48,7 @@ class Schedule extends Equatable {
   static int daysListToDay(List<dynamic> value) {
     var [a] = value;
     if (a == 0) a = 7; // Sunday
+
     return a;
   }
 
@@ -59,6 +60,20 @@ class Schedule extends Equatable {
     if (start1.compareTo(end2) >= 0) return false;
     if (start2.compareTo(end1) >= 0) return false;
     return true;
+  }
+
+  @override
+  int compareTo(Schedule other) {
+    final dayComparison = day.compareTo(other.day);
+    final startComparison = start.compareTo(other.start);
+    final endComparison = end.compareTo(other.end);
+
+    final comparisons = [dayComparison, startComparison, endComparison];
+
+    return comparisons.firstWhere(
+      (comparison) => comparison != 0,
+      orElse: () => comparisons.last,
+    );
   }
 }
 
