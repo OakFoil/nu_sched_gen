@@ -29,84 +29,93 @@ class SchedGenScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final coursesCart = ref.watch(coursesCartProvider);
 
-    return AsyncValueBuilder(
-      asyncValue: ref.watch(timeTablesProvider),
-      showData: (timeTables) {
-        final orderedTimeTables = timeTables.toList();
-
-        return ListView(
-          children:
-              [
-                Center(child: DisplayText("Generate Schedule")),
-                CourseSearch(),
-              ] +
-              coursesCart
-                  .sorted()
-                  .map(
-                    (courseCode) =>
-                        CoursePreview(courseCode: courseCode, onTap: () {}),
-                  )
-                  .toList() +
-              [
-                Divider(),
-                Row(
-                  spacing: 16,
-                  children: [
-                    Column(
-                      spacing: 16,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        "Days:",
-                        "Week Days Diff:",
-                        "Min Start Time:",
-                        "Max End Time:",
-                      ].map((text) => TitleText(text)).toList(),
-                    ),
-                    Column(
-                      spacing: 16,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        orderedTimeTables
-                            .map((timeTable) => timeTable.days.length)
-                            .maxOrNull
-                            .toStringOrDash,
-                        orderedTimeTables
-                            .map((timeTable) => timeTable.weekDaysDiff.sum)
-                            .maxOrNull
-                            .toStringOrDash,
-                        (orderedTimeTables
-                                .map((timeTable) => timeTable.minDayStart)
-                                .minOrNull
-                                ?.format(context))
-                            .toStringOrDash,
-                        (orderedTimeTables
-                                .map((timeTable) => timeTable.maxDayEnd)
-                                .maxOrNull
-                                ?.format(context))
-                            .toStringOrDash,
-                      ].map((text) => TitleText(text)).toList(),
-                    ),
-                  ],
-                ),
-                Divider(),
-                SizedBox(
-                  height: 500,
-                  child: ListView.builder(
-                    prototypeItem: timeTables.isEmpty
-                        ? null
-                        : TimeTablePreview(timeTables.first),
-                    itemCount: timeTables.length,
-                    itemBuilder: (context, index) =>
-                        timeTables.elementAtOrNull(index) == null
-                        ? null
-                        : TimeTablePreview(timeTables.elementAt(index)),
-                  ),
-                ),
-              ],
-        );
-      },
+    return ListView(
+      children:
+          const [
+            Center(child: DisplayText("Generate Schedule")),
+            CourseSearch(),
+          ] +
+          coursesCart
+              .sorted()
+              .map(
+                (courseCode) =>
+                    CoursePreview(courseCode: courseCode, onTap: () {}),
+              )
+              .toList() +
+          const [
+            Divider(),
+            TimeTablesStats(),
+            Divider(),
+            SizedBox(height: 500, child: TimeTablesList()),
+          ],
     );
   }
+}
+
+class TimeTablesStats extends ConsumerWidget {
+  const TimeTablesStats({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => AsyncValueBuilder(
+    asyncValue: ref.watch(timeTablesProvider),
+    showData: (timeTables) => Row(
+      spacing: 16,
+      children: [
+        Column(
+          spacing: 16,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            "Days:",
+            "Week Days Diff:",
+            "Min Start Time:",
+            "Max End Time:",
+          ].map((text) => TitleText(text)).toList(),
+        ),
+        Column(
+          spacing: 16,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            timeTables
+                .map((timeTable) => timeTable.days.length)
+                .maxOrNull
+                .toStringOrDash,
+            timeTables
+                .map((timeTable) => timeTable.weekDaysDiff.sum)
+                .maxOrNull
+                .toStringOrDash,
+            (timeTables
+                    .map((timeTable) => timeTable.minDayStart)
+                    .minOrNull
+                    ?.format(context))
+                .toStringOrDash,
+            (timeTables
+                    .map((timeTable) => timeTable.maxDayEnd)
+                    .maxOrNull
+                    ?.format(context))
+                .toStringOrDash,
+          ].map((text) => TitleText(text)).toList(),
+        ),
+      ],
+    ),
+  );
+}
+
+class TimeTablesList extends ConsumerWidget {
+  const TimeTablesList({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => AsyncValueBuilder(
+    asyncValue: ref.watch(timeTablesProvider),
+    showData: (timeTables) => ListView.builder(
+      prototypeItem: timeTables.isEmpty
+          ? null
+          : TimeTablePreview(timeTables.first),
+      itemCount: timeTables.length,
+      itemBuilder: (context, index) => timeTables.elementAtOrNull(index) == null
+          ? null
+          : TimeTablePreview(timeTables.elementAt(index)),
+    ),
+  );
 }
 
 class CourseSearch extends ConsumerStatefulWidget {
@@ -120,30 +129,27 @@ class _CourseSearchState extends ConsumerState<CourseSearch> {
   final SearchController controller = SearchController();
 
   @override
-  Widget build(BuildContext context) {
-    final coursesCart = ref.watch(coursesCartProvider.notifier);
-    return Center(
-      child: AsyncValueBuilder(
-        asyncValue: ref.watch(allSectionsProvider),
-        showData: (allSections) => SearchAnchor.bar(
-          barHintText: 'Search courses',
-          searchController: controller,
-          suggestionsBuilder: (context, controller) => allSections.keys
-              .searchFor(controller.text)
-              .map(
-                (courseCode) => CoursePreview(
-                  courseCode: courseCode,
-                  onTap: () {
-                    controller.closeView(controller.text);
-                    coursesCart.addCourse(courseCode);
-                  },
-                ),
-              )
-              .take(10),
-        ),
+  Widget build(BuildContext context) => Center(
+    child: AsyncValueBuilder(
+      asyncValue: ref.watch(allSectionsProvider),
+      showData: (allSections) => SearchAnchor.bar(
+        barHintText: 'Search courses',
+        searchController: controller,
+        suggestionsBuilder: (context, controller) => allSections.keys
+            .searchFor(controller.text)
+            .take(10)
+            .map(
+              (courseCode) => CoursePreview(
+                courseCode: courseCode,
+                onTap: () {
+                  controller.closeView("");
+                  ref.read(coursesCartProvider.notifier).addCourse(courseCode);
+                },
+              ),
+            ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 class TimeTablePreview extends StatelessWidget {
@@ -175,27 +181,28 @@ class CoursePreview extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(coursesCartProvider);
-    final coursesCart = ref.watch(coursesCartProvider.notifier);
-
-    return ListTile(
-      title: TitleText(courseCode),
-      onTap: onTap,
-      trailing: coursesCart.isInCart(courseCode)
-          ? IconButton(
-              onPressed: () {
-                coursesCart.removeCourse(courseCode);
-              },
-              icon: Icon(Icons.highlight_remove),
-            )
-          : SizedBox.shrink(),
-    );
-  }
+  Widget build(BuildContext context, WidgetRef ref) => ListTile(
+    title: TitleText(courseCode),
+    onTap: onTap,
+    trailing:
+        ref.watch(
+          coursesCartProvider.select(
+            (coursesCart) => coursesCart.contains(courseCode),
+          ),
+        )
+        ? IconButton(
+            onPressed: () {
+              ref.read(coursesCartProvider.notifier).removeCourse(courseCode);
+            },
+            icon: const Icon(Icons.highlight_remove),
+          )
+        : const SizedBox.shrink(),
+  );
 }
 
 class SectionPreview extends StatelessWidget {
   final Section section;
+
   const SectionPreview(this.section, {super.key});
 
   @override
@@ -252,7 +259,7 @@ class SectionPreview extends StatelessWidget {
                 ),
               ],
             ),
-            Divider(),
+            const Divider(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               spacing: 16,
@@ -264,9 +271,6 @@ class SectionPreview extends StatelessWidget {
                 (section.lab?.sectionLetter).toString(),
               ].map((text) => TitleText(text)).toList(),
             ),
-            // TitleText(
-            //   "${section.sectionNumber} - ${section.tutorial?.sectionLetter} - ${section.lab?.sectionLetter}",
-            // ),
           ],
         ),
       ),
