@@ -64,7 +64,9 @@ class Schedule extends Equatable implements Comparable<Schedule> {
 
   @override
   int compareTo(Schedule other) {
-    final dayComparison = day.compareTo(other.day);
+    /* Days start with Monday = 1 and end with Sunday = 7
+    Make them start with Saturday = 0 and end with Friday = 6 */
+    final dayComparison = ((day + 1) % 7).compareTo((other.day + 1) % 7);
     final startComparison = start.compareTo(other.start);
     final endComparison = end.compareTo(other.end);
 

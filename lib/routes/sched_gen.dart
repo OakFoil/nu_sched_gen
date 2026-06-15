@@ -219,7 +219,7 @@ class SectionPreview extends StatelessWidget {
                       .map(
                         (schedule) => TitleText(
                           DateFormat.EEEE().format(
-                            DateTime(1970, 1, schedule.day),
+                            DateTime(1970, 0, schedule.day),
                           ),
                         ),
                       )
