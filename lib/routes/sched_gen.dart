@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:nu_sched_gen/models/section.dart';
 import 'package:nu_sched_gen/models/time_table.dart';
 import 'package:nu_sched_gen/services/courses_cart.dart';
-import 'package:nu_sched_gen/services/repositories/slots.dart';
+import 'package:nu_sched_gen/services/repositories/all_sections.dart';
 import 'package:nu_sched_gen/services/time_tables.dart';
 import 'package:nu_sched_gen/search.dart';
 import 'package:common/common.dart';
@@ -124,13 +124,11 @@ class _CourseSearchState extends ConsumerState<CourseSearch> {
     final coursesCart = ref.watch(coursesCartProvider.notifier);
     return Center(
       child: AsyncValueBuilder(
-        asyncValue: ref.watch(slotsProvider),
-        showData: (slots) => SearchAnchor.bar(
+        asyncValue: ref.watch(allSectionsProvider),
+        showData: (allSections) => SearchAnchor.bar(
           barHintText: 'Search courses',
           searchController: controller,
-          suggestionsBuilder: (context, controller) => slots
-              .map((slot) => slot.courseCode)
-              .toSet()
+          suggestionsBuilder: (context, controller) => allSections.keys
               .searchFor(controller.text)
               .map(
                 (courseCode) => CoursePreview(
