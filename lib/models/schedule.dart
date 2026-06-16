@@ -81,15 +81,14 @@ class Schedule extends Equatable implements Comparable<Schedule> {
 
 extension IterableScheduleUtils on Iterable<Schedule> {
   bool get containsConflicts {
-    final Map<int, Set<Schedule>> groupedSchedules = groupSetsBy(
+    final Map<int, List<Schedule>> groupedSchedules = groupListsBy(
       (schedule) => schedule.day,
     );
-    final Iterable<List<Schedule>> groupedAndSortedSchedules = groupedSchedules
-        .values
-        .map((schedules) => schedules.sortedBy((schedule) => schedule.start));
 
-    return groupedAndSortedSchedules
+    return groupedSchedules.values
         .map((schedulesWithSameDay) {
+          schedulesWithSameDay.sort();
+
           for (var i = 0; i < schedulesWithSameDay.length - 1; i++) {
             if (schedulesWithSameDay[i].conflictsWith(
               schedulesWithSameDay[i + 1],

@@ -13,9 +13,7 @@ class Sections extends _$Sections {
     final allSectionsPerCourseCode = await ref.watch(
       allSectionsProvider.future,
     );
-    final Map<String, Set<Section>> sectionsPerCourseCode = Map.from(
-      allSectionsPerCourseCode,
-    );
+    final sectionsPerCourseCode = Map.of(allSectionsPerCourseCode);
     sectionsPerCourseCode.removeWhere(
       (courseCode, sections) => !coursesCart.contains(courseCode),
     );

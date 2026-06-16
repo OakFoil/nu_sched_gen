@@ -13,7 +13,7 @@ class TimeTables extends _$TimeTables {
     final Map<String, Set<Section>> sectionsPerCourseCode = await ref.watch(
       sectionsProvider.future,
     );
-    final Set<TimeTable> timeTables = TimeTable.allPossibleTimeTables(
+    final timeTables = TimeTable.allPossibleTimeTables(
       sectionsPerCourseCode: sectionsPerCourseCode,
     );
 
@@ -39,6 +39,7 @@ class TimeTables extends _$TimeTables {
       timeTables,
       (accOptimizedTimeTables, f) => f(accOptimizedTimeTables).toSet(),
     );
+
     return optimizedTimeTables;
   }
 }

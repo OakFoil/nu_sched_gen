@@ -10,7 +10,7 @@ class TimeTable extends ConflictsWith<TimeTable> {
 
   @override
   Set<Schedule> get schedules =>
-      sections.map((section) => section.schedules).flattened.toSet();
+      sections.map((section) => section.schedules).flattenedToSet;
   @override
   List<Object?> get props => [sections];
 
@@ -20,8 +20,7 @@ class TimeTable extends ConflictsWith<TimeTable> {
   Set<int> get weekDaysDiff {
     final List<int> weekDays = {
       for (var i = 1; i <= 7; i++) i,
-    }.difference(days).toList();
-    weekDays.sort();
+    }.difference(days).toList()..sort();
 
     return {
       for (var i = 0; i < weekDays.length - 1; i++)

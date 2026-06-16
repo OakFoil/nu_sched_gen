@@ -13,7 +13,7 @@ class Section extends ConflictsWith<Section> {
 
   @override
   Set<Schedule> get schedules =>
-      slots.map((slot) => slot.schedules).flattened.toSet();
+      slots.map((slot) => slot.schedules).flattenedToSet;
   @override
   List<Object?> get props => [lecture, tutorial, lab];
 
