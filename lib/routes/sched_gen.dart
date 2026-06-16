@@ -37,10 +37,7 @@ class SchedGenScreen extends ConsumerWidget {
           ] +
           coursesCart
               .sorted()
-              .map(
-                (courseCode) =>
-                    CoursePreview(courseCode: courseCode, onTap: () {}),
-              )
+              .map((courseCode) => CoursePreview(courseCode: courseCode))
               .toList() +
           const [
             Divider(),
@@ -172,13 +169,9 @@ class TimeTablePreview extends StatelessWidget {
 
 class CoursePreview extends ConsumerWidget {
   final String courseCode;
-  final void Function() onTap;
+  final GestureTapCallback? onTap;
 
-  const CoursePreview({
-    super.key,
-    required this.courseCode,
-    required this.onTap,
-  });
+  const CoursePreview({super.key, required this.courseCode, this.onTap});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => ListTile(
