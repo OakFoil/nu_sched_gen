@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: https:\\sched-gen.ct.ws
+      url: https:\\sched-gen.rf.gd
     steps:
       - name: Clone repository
         uses: actions/checkout@v5
