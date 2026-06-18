@@ -35,7 +35,7 @@ class Slot extends ConflictsWith<Slot> {
     sectionNumberAndLetter,
   ];
 
-  Slot({
+  const Slot({
     required this.type,
     required this.courseCode,
     required this.instructors,

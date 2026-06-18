@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:nu_sched_gen/models/section.dart';
 import 'package:nu_sched_gen/models/time_table.dart';
 import 'package:nu_sched_gen/services/sections.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -10,51 +9,55 @@ part 'time_tables.g.dart';
 class TimeTables extends _$TimeTables {
   @override
   Future<Set<TimeTable>> build() async {
-    final Map<String, Set<Section>> sectionsPerCourseCode = await ref.watch(
-      sectionsProvider.future,
-    );
+    final sectionsPerCourseCode = await ref.watch(sectionsProvider.future);
     final timeTables = TimeTable.allPossibleTimeTables(
       sectionsPerCourseCode: sectionsPerCourseCode,
-    );
+    ).toSet();
 
     final optimizations = [
-      composeOptimization(
+      _composeOptimization(
         (a) => a.minOrNull,
         (timeTable) => timeTable.days.length,
       ),
-      composeOptimization(
+      _composeOptimization(
         (a) => a.minOrNull,
         (timeTable) => timeTable.weekDaysDiff.sum,
       ),
-      composeOptimization(
+      _composeOptimization(
         (a) => a.minOrNull,
         (timeTable) => timeTable.maxDayEnd,
       ),
-      composeOptimization(
+      _composeOptimization(
         (a) => a.maxOrNull,
         (timeTable) => timeTable.minDayStart,
       ),
     ];
-    final Set<TimeTable> optimizedTimeTables = optimizations.fold(
+    final Iterable<TimeTable> optimizedTimeTables = optimizations.fold(
       timeTables,
-      (accOptimizedTimeTables, f) => f(accOptimizedTimeTables).toSet(),
+      (accOptimizedTimeTables, f) => f(accOptimizedTimeTables),
     );
 
-    return optimizedTimeTables;
+    return optimizedTimeTables.toSet();
   }
 }
 
 Iterable<TimeTable> Function(Iterable<TimeTable>)
-composeOptimization<T extends Comparable<T>>(
+_composeOptimization<T extends Comparable<T>>(
   T? Function(Iterable<T>) minOrMaxOrNull,
   T Function(TimeTable) getValueToOptimize,
 ) => (timeTables) {
-  final optimizedValue = minOrMaxOrNull(
-    timeTables.map((timeTable) => getValueToOptimize(timeTable)),
+  final annotatedTimeTables = timeTables.map(
+    (timeTable) => (timeTable, getValueToOptimize(timeTable)),
   );
+  final optimizedValue = minOrMaxOrNull(
+    annotatedTimeTables.map((annotatedTimeTable) => annotatedTimeTable.$2),
+  );
+
   return optimizedValue == null
       ? timeTables
-      : timeTables.where(
-          (timeTable) => getValueToOptimize(timeTable) == optimizedValue,
-        );
+      : annotatedTimeTables
+            .where(
+              (annotatedTimeTable) => annotatedTimeTable.$2 == optimizedValue,
+            )
+            .map((annotatedTimeTable) => annotatedTimeTable.$1);
 };

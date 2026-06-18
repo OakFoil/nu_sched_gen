@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -81,24 +80,23 @@ class Schedule extends Equatable implements Comparable<Schedule> {
 
 extension IterableScheduleUtils on Iterable<Schedule> {
   bool get containsConflicts {
-    final Map<int, List<Schedule>> groupedSchedules = groupListsBy(
-      (schedule) => schedule.day,
-    );
+    final schedules = [...this];
 
-    return groupedSchedules.values
-        .map((schedulesWithSameDay) {
-          schedulesWithSameDay.sort();
+    schedules.sort((scheduleA, scheduleB) {
+      final dayComparison = scheduleA.day.compareTo(scheduleB.day);
+      final startComparison = scheduleA.start.compareTo(scheduleB.start);
 
-          for (var i = 0; i < schedulesWithSameDay.length - 1; i++) {
-            if (schedulesWithSameDay[i].conflictsWith(
-              schedulesWithSameDay[i + 1],
-            )) {
-              return true;
-            }
-          }
-          return false;
-        })
-        .any((a) => a);
+      return dayComparison != 0 ? dayComparison : startComparison;
+    });
+
+    for (var i = 0; i < schedules.length - 1; i++) {
+      final current = schedules[i];
+      final next = schedules[i + 1];
+
+      if (current.day == next.day && current.conflictsWith(next)) return true;
+    }
+
+    return false;
   }
 
   bool get containsConflictsSlow =>
