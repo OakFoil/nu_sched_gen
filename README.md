@@ -27,5 +27,5 @@ It fetches all courses data from a backend hosting [this code](https://github.co
 5. Run the app
 
    ```bash
-   flutter run
+   flutter run --release
    ```
