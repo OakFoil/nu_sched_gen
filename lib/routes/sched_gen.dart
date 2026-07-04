@@ -29,22 +29,35 @@ class SchedGenScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final coursesCart = ref.watch(coursesCartProvider);
 
-    return ListView(
-      children:
-          const [
-            Center(child: DisplayText("Generate Schedule")),
-            CourseSearch(),
-          ] +
-          coursesCart
-              .sorted()
-              .map((courseCode) => CoursePreview(courseCode: courseCode))
-              .toList() +
-          const [
-            Divider(),
-            TimeTablesStats(),
-            Divider(),
-            SizedBox(height: 500, child: TimeTablesList()),
-          ],
+    return AsyncValueBuilder(
+      asyncValue: ref.watch(timeTablesProvider),
+      showData: (timeTables) => CustomScrollView(
+        slivers: [
+          SliverList.list(
+            children:
+                const [
+                  Center(child: DisplayText("Generate Schedule")),
+                  CoursesSearch(),
+                ] +
+                coursesCart
+                    .sorted()
+                    .map((courseCode) => CoursePreview(courseCode: courseCode))
+                    .toList() +
+                const [Divider(), TimeTablesStats(), Divider()],
+          ),
+          SliverPrototypeExtentList(
+            prototypeItem: timeTables.isEmpty
+                ? SizedBox.shrink()
+                : TimeTablePreview(timeTables.first),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => timeTables.elementAtOrNull(index) == null
+                  ? null
+                  : TimeTablePreview(timeTables.elementAt(index)),
+              childCount: timeTables.length,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -97,32 +110,14 @@ class TimeTablesStats extends ConsumerWidget {
   );
 }
 
-class TimeTablesList extends ConsumerWidget {
-  const TimeTablesList({super.key});
+class CoursesSearch extends ConsumerStatefulWidget {
+  const CoursesSearch({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => AsyncValueBuilder(
-    asyncValue: ref.watch(timeTablesProvider),
-    showData: (timeTables) => ListView.builder(
-      prototypeItem: timeTables.isEmpty
-          ? null
-          : TimeTablePreview(timeTables.first),
-      itemCount: timeTables.length,
-      itemBuilder: (context, index) => timeTables.elementAtOrNull(index) == null
-          ? null
-          : TimeTablePreview(timeTables.elementAt(index)),
-    ),
-  );
+  ConsumerState<CoursesSearch> createState() => _CourseSearchState();
 }
 
-class CourseSearch extends ConsumerStatefulWidget {
-  const CourseSearch({super.key});
-
-  @override
-  ConsumerState<CourseSearch> createState() => _CourseSearchState();
-}
-
-class _CourseSearchState extends ConsumerState<CourseSearch> {
+class _CourseSearchState extends ConsumerState<CoursesSearch> {
   final SearchController controller = SearchController();
 
   @override
