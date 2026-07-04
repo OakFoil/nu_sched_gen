@@ -44,14 +44,23 @@ class SchedGenScreen extends ConsumerWidget {
                     .sorted()
                     .map((courseCode) => CoursePreview(courseCode: courseCode))
                     .toList() +
-                const [
+                [
                   Divider(),
-                  Row(
-                    children: [
-                      HeadlineText("Optimizations Order (Drag "),
-                      Icon(Icons.drag_handle),
-                      HeadlineText(" to reorder)"),
-                    ],
+                  ListTile(
+                    contentPadding: EdgeInsets.only(right: 16),
+                    title: Row(
+                      children: [
+                        HeadlineText("Optimizations Order (Drag "),
+                        Icon(Icons.drag_handle),
+                        HeadlineText(" to reorder)"),
+                      ],
+                    ),
+                    trailing: IconButton(
+                      onPressed: () {
+                        ref.invalidate(optimizationsProvider);
+                      },
+                      icon: Icon(Icons.replay),
+                    ),
                   ),
                 ],
           ),
@@ -128,8 +137,8 @@ class TimeTablesStats extends ConsumerWidget {
           children: [
             "Days:",
             "Week Days Diff:",
-            "End Time:",
-            "Day Duration:",
+            "Max End Time:",
+            "Max Day Duration:",
           ].map((text) => TitleText(text)).toList(),
         ),
         Column(
