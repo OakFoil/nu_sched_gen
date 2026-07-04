@@ -1,5 +1,5 @@
-import 'package:collection/collection.dart';
 import 'package:nu_sched_gen/models/time_table.dart';
+import 'package:nu_sched_gen/services/optimizations.dart';
 import 'package:nu_sched_gen/services/sections.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -14,50 +14,12 @@ class TimeTables extends _$TimeTables {
       sectionsPerCourseCode: sectionsPerCourseCode,
     ).toSet();
 
-    final optimizations = [
-      _composeOptimization(
-        (a) => a.minOrNull,
-        (timeTable) => timeTable.days.length,
-      ),
-      _composeOptimization(
-        (a) => a.minOrNull,
-        (timeTable) => timeTable.weekDaysDiff.sum,
-      ),
-      _composeOptimization(
-        (a) => a.minOrNull,
-        (timeTable) => timeTable.maxDayEnd,
-      ),
-      _composeOptimization(
-        (a) => a.maxOrNull,
-        (timeTable) => timeTable.minDayStart,
-      ),
-    ];
+    final optimizations = ref.watch(optimizationsProvider);
     final Iterable<TimeTable> optimizedTimeTables = optimizations.fold(
       timeTables,
-      (accOptimizedTimeTables, f) => f(accOptimizedTimeTables),
+      (accOptimizedTimeTables, f) => f.apply(accOptimizedTimeTables),
     );
 
     return optimizedTimeTables.toSet();
   }
 }
-
-Iterable<TimeTable> Function(Iterable<TimeTable>)
-_composeOptimization<T extends Comparable<T>>(
-  T? Function(Iterable<T>) minOrMaxOrNull,
-  T Function(TimeTable) getValueToOptimize,
-) => (timeTables) {
-  final annotatedTimeTables = timeTables.map(
-    (timeTable) => (timeTable, getValueToOptimize(timeTable)),
-  );
-  final optimizedValue = minOrMaxOrNull(
-    annotatedTimeTables.map((annotatedTimeTable) => annotatedTimeTable.$2),
-  );
-
-  return optimizedValue == null
-      ? timeTables
-      : annotatedTimeTables
-            .where(
-              (annotatedTimeTable) => annotatedTimeTable.$2 == optimizedValue,
-            )
-            .map((annotatedTimeTable) => annotatedTimeTable.$1);
-};

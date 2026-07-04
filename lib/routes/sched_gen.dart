@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:nu_sched_gen/models/section.dart';
 import 'package:nu_sched_gen/models/time_table.dart';
 import 'package:nu_sched_gen/services/courses_cart.dart';
+import 'package:nu_sched_gen/services/optimizations.dart';
 import 'package:nu_sched_gen/services/repositories/all_sections.dart';
 import 'package:nu_sched_gen/services/time_tables.dart';
 import 'package:nu_sched_gen/search.dart';
@@ -43,20 +44,70 @@ class SchedGenScreen extends ConsumerWidget {
                     .sorted()
                     .map((courseCode) => CoursePreview(courseCode: courseCode))
                     .toList() +
-                const [Divider(), TimeTablesStats(), Divider()],
+                const [
+                  Divider(),
+                  Row(
+                    children: [
+                      HeadlineText("Optimizations Order (Drag "),
+                      Icon(Icons.drag_handle),
+                      HeadlineText(" to reorder)"),
+                    ],
+                  ),
+                ],
           ),
-          SliverPrototypeExtentList(
-            prototypeItem: timeTables.isEmpty
-                ? SizedBox.shrink()
-                : TimeTablePreview(timeTables.first),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => timeTables.elementAtOrNull(index) == null
-                  ? null
-                  : TimeTablePreview(timeTables.elementAt(index)),
-              childCount: timeTables.length,
-            ),
-          ),
+          TimeTablesOptimizations(),
+          SliverList.list(children: [Divider(), TimeTablesStats(), Divider()]),
+          TimeTablesList(timeTables),
         ],
+      ),
+    );
+  }
+}
+
+class TimeTablesOptimizations extends ConsumerWidget {
+  const TimeTablesOptimizations({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final optimizations = ref.watch(optimizationsProvider);
+
+    return SliverPadding(
+      padding: const EdgeInsetsGeometry.all(0),
+      sliver: SliverReorderableList(
+        autoScrollerVelocityScalar: 0.1, // TODO add drag boundary
+        itemCount: optimizations.length,
+        itemBuilder: (context, index) => ListTile(
+          key: ObjectKey(optimizations[index]),
+          title: Text(optimizations[index].name),
+          trailing: ReorderableDragStartListener(
+            index: index,
+            child: Icon(Icons.drag_handle),
+          ),
+        ),
+        onReorderItem: (int oldIndex, int newIndex) => ref
+            .read(optimizationsProvider.notifier)
+            .moveBefore(oldIndex, newIndex),
+      ),
+    );
+  }
+}
+
+// Cannot add AsyncValueBuilder to it since when loading a prograss bar is displayed which breaks sliver rendering
+class TimeTablesList extends StatelessWidget {
+  final Set<TimeTable> timeTables;
+  const TimeTablesList(this.timeTables, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPrototypeExtentList(
+      prototypeItem: timeTables.isEmpty
+          ? SizedBox.shrink()
+          : TimeTablePreview(timeTables.first),
+      delegate: SliverChildBuilderDelegate(
+        (context, index) => timeTables.elementAtOrNull(index) == null
+            ? null
+            : TimeTablePreview(timeTables.elementAt(index)),
+        childCount: timeTables.length,
       ),
     );
   }
@@ -77,8 +128,8 @@ class TimeTablesStats extends ConsumerWidget {
           children: [
             "Days:",
             "Week Days Diff:",
-            "Min Start Time:",
-            "Max End Time:",
+            "End Time:",
+            "Day Duration:",
           ].map((text) => TitleText(text)).toList(),
         ),
         Column(
@@ -94,15 +145,17 @@ class TimeTablesStats extends ConsumerWidget {
                 .maxOrNull
                 .toStringOrDash,
             (timeTables
-                    .map((timeTable) => timeTable.minDayStart)
-                    .minOrNull
-                    ?.format(context))
-                .toStringOrDash,
-            (timeTables
                     .map((timeTable) => timeTable.maxDayEnd)
                     .maxOrNull
                     ?.format(context))
                 .toStringOrDash,
+            ((durationInMinutes) => durationInMinutes == null
+                ? "-"
+                : Duration(minutes: durationInMinutes).format())(
+              timeTables
+                  .map((timeTable) => timeTable.maxDayDurationInMinutes)
+                  .maxOrNull,
+            ),
           ].map((text) => TitleText(text)).toList(),
         ),
       ],
