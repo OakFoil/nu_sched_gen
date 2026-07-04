@@ -33,17 +33,24 @@ class TimeTable extends ConflictsWith<TimeTable> {
       TimeTable(sections.followedBy(timeTable.sections));
 
   static Iterable<TimeTable> allPossibleTimeTables({
-    required Set<Set<Section>> sectionsPerCourseCode,
+    required Map<String, Set<Section>> sectionsPerCourseCode,
     Set<Section> registeredSections = const {},
   }) {
     final openSectionsPerCourseCode = sectionsPerCourseCode
         .map(
-          (courseCodeSections) =>
-              courseCodeSections.where((section) => section.seatsLeft > 0),
+          (courseCode, courseCodeSections) => MapEntry(
+            courseCode,
+            courseCodeSections
+                .where((section) => section.seatsLeft > 0)
+                .followedBy(
+                  registeredSections.where(
+                    (registeredSection) =>
+                        registeredSection.courseCode == courseCode,
+                  ),
+                ),
+          ),
         )
-        .followedBy(
-          registeredSections.map((registeredSection) => {registeredSection}),
-        );
+        .values;
 
     if (openSectionsPerCourseCode.isEmpty ||
         openSectionsPerCourseCode.any(

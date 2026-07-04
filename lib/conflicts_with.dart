@@ -8,8 +8,11 @@ abstract class ConflictsWith<T> extends Equatable {
 
   Iterable<Schedule> get schedules;
 
+  @nonVirtual
   bool get containsConflicts => schedules.containsConflicts;
+  @nonVirtual
   bool get containsConflictsSlow => schedules.containsConflictsSlow;
+  @nonVirtual
   bool conflictsWith(T value) => schedules
       .followedBy((value as ConflictsWith<T>).schedules)
       .containsConflicts;

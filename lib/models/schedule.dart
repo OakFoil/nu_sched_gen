@@ -41,6 +41,7 @@ class Schedule extends Equatable implements Comparable<Schedule> {
 
   static TimeOfDay timeListToTimeOfDay(List<dynamic> value) {
     final [hour, minute, _] = value;
+
     return TimeOfDay(hour: hour, minute: minute);
   }
 

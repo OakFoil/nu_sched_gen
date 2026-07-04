@@ -8,7 +8,7 @@ part 'sections.g.dart';
 @Riverpod(keepAlive: true)
 class Sections extends _$Sections {
   @override
-  Future<Set<Set<Section>>> build() async {
+  Future<Map<String, Set<Section>>> build() async {
     final coursesCart = ref.watch(coursesCartProvider);
     final allSectionsPerCourseCode = await ref.watch(
       allSectionsProvider.future,
@@ -18,6 +18,6 @@ class Sections extends _$Sections {
       (courseCode, sections) => !coursesCart.contains(courseCode),
     );
 
-    return sectionsPerCourseCode.values.toSet();
+    return sectionsPerCourseCode;
   }
 }
