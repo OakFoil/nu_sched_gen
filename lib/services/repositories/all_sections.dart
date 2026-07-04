@@ -14,17 +14,20 @@ final InfinityfreeBypasser _bypasser = InfinityfreeBypasser();
 class AllSections extends _$AllSections {
   @override
   Future<Map<String, Set<Section>>> build() async {
-    const url = "https://nu-courses.rf.gd";
+    const url = "https://nu-courses.rf.gd",
+        corsFixUrl = "https://proxy.corsfix.com/?" + url;
 
-    await _bypasser.bypass(url);
+    await _bypasser.bypass(corsFixUrl);
 
     if (_bypasser.cookie == null) {
       return Future.error("InfinityFree Bot Check Bypass Failed");
     }
 
     final Response(:body) = await get(
-      Uri.parse(url),
-      headers: {'Cookie': _bypasser.cookie!},
+      Uri.parse(corsFixUrl),
+      headers: {
+        "x-corsfix-headers": json.encode({'Cookie': _bypasser.cookie!}),
+      },
     );
     final List<dynamic> data = json.decode(body)["data"];
     final Set<Slot> slots = data.map((a) => Slot.fromJson(a)).toSet();
