@@ -29,7 +29,17 @@ class TimeTable extends ConflictsWith<TimeTable> {
 
   TimeOfDay get maxDayEnd => schedules.map((schedule) => schedule.end).max;
   TimeOfDay get minDayStart => schedules.map((schedule) => schedule.start).min;
-  int get maxDayDurationInMinutes => maxDayEnd.toMinute - minDayStart.toMinute;
+  int get maxDayDurationInMinutes =>
+      groupBy(schedules, (schedule) => schedule.day)
+          .map(
+            (day, schedules) => MapEntry(
+              day,
+              schedules.map((schedule) => schedule.end).max.toMinute -
+                  schedules.map((schedule) => schedule.start).min.toMinute,
+            ),
+          )
+          .values
+          .max;
 
   TimeTable mergeWith(TimeTable timeTable) =>
       TimeTable(sections.followedBy(timeTable.sections));
