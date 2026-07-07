@@ -16,12 +16,12 @@ class Optimizations extends _$Optimizations {
         (timeTable) => timeTable.weekDaysDiff.sum,
       ),
       Optimization(
-        "End Time",
+        "Max End Time",
         (a) => a.min,
         (timeTable) => timeTable.maxDayEnd,
       ),
       Optimization(
-        "Day Duration",
+        "Max Day Duration",
         (a) => a.min,
         (timeTable) => timeTable.maxDayDurationInMinutes,
       ),

@@ -28,7 +28,14 @@ class SchedGenScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final coursesCart = ref.watch(coursesCartProvider);
+    final coursesPreviews = ref.watch(
+      coursesCartProvider.select(
+        (coursesCart) => coursesCart
+            .sorted()
+            .map((courseCode) => CoursePreview(courseCode: courseCode))
+            .toList(),
+      ),
+    );
 
     return AsyncValueBuilder(
       asyncValue: ref.watch(timeTablesProvider),
@@ -40,20 +47,23 @@ class SchedGenScreen extends ConsumerWidget {
                   Center(child: DisplayText("Generate Schedule")),
                   CoursesSearch(),
                 ] +
-                coursesCart
-                    .sorted()
-                    .map((courseCode) => CoursePreview(courseCode: courseCode))
-                    .toList() +
+                coursesPreviews +
                 [
                   Divider(),
                   ListTile(
                     contentPadding: EdgeInsets.only(right: 16),
-                    title: Row(
-                      children: [
-                        HeadlineText("Optimizations Order (Drag "),
-                        Icon(Icons.drag_handle),
-                        HeadlineText(" to reorder)"),
-                      ],
+                    title: Text.rich(
+                      TextSpan(
+                        style: Theme.of(context).textTheme.headlineMedium,
+                        children: const [
+                          TextSpan(text: "Optimizations Order (Drag "),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            child: Icon(Icons.drag_handle),
+                          ),
+                          TextSpan(text: " to reorder)"),
+                        ],
+                      ),
                     ),
                     trailing: IconButton(
                       onPressed: () {
@@ -80,23 +90,20 @@ class TimeTablesOptimizations extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final optimizations = ref.watch(optimizationsProvider);
 
-    return SliverPadding(
-      padding: const EdgeInsetsGeometry.all(0),
-      sliver: SliverReorderableList(
-        autoScrollerVelocityScalar: 0.1, // TODO add drag boundary
-        itemCount: optimizations.length,
-        itemBuilder: (context, index) => ListTile(
-          key: ObjectKey(optimizations[index]),
-          title: Text(optimizations[index].name),
-          trailing: ReorderableDragStartListener(
-            index: index,
-            child: Icon(Icons.drag_handle),
-          ),
+    return SliverReorderableList(
+      autoScrollerVelocityScalar: 0.1, // TODO add drag boundary
+      itemCount: optimizations.length,
+      itemBuilder: (context, index) => ListTile(
+        key: ObjectKey(optimizations[index]),
+        title: Text(optimizations[index].name),
+        trailing: ReorderableDragStartListener(
+          index: index,
+          child: Icon(Icons.drag_handle),
         ),
-        onReorderItem: (int oldIndex, int newIndex) => ref
-            .read(optimizationsProvider.notifier)
-            .moveBefore(oldIndex, newIndex),
       ),
+      onReorderItem: (oldIndex, newIndex) => ref
+          .read(optimizationsProvider.notifier)
+          .moveBefore(oldIndex, newIndex),
     );
   }
 }
@@ -107,19 +114,16 @@ class TimeTablesList extends StatelessWidget {
   const TimeTablesList(this.timeTables, {super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return SliverPrototypeExtentList(
-      prototypeItem: timeTables.isEmpty
-          ? SizedBox.shrink()
-          : TimeTablePreview(timeTables.first),
-      delegate: SliverChildBuilderDelegate(
-        (context, index) => timeTables.elementAtOrNull(index) == null
-            ? null
-            : TimeTablePreview(timeTables.elementAt(index)),
-        childCount: timeTables.length,
-      ),
-    );
-  }
+  Widget build(BuildContext context) => SliverPrototypeExtentList(
+    prototypeItem: timeTables.isEmpty
+        ? SizedBox.shrink()
+        : TimeTablePreview(timeTables.first),
+    delegate: SliverChildBuilderDelegate((context, index) {
+      final timeTable = timeTables.elementAtOrNull(index);
+
+      return timeTable == null ? null : TimeTablePreview(timeTable);
+    }, childCount: timeTables.length),
+  );
 }
 
 class TimeTablesStats extends ConsumerWidget {
@@ -128,47 +132,54 @@ class TimeTablesStats extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => AsyncValueBuilder(
     asyncValue: ref.watch(timeTablesProvider),
-    showData: (timeTables) => Row(
-      spacing: 16,
-      children: [
-        Column(
-          spacing: 16,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            "Days:",
-            "Week Days Diff:",
-            "Max End Time:",
-            "Max Day Duration:",
-          ].map((text) => TitleText(text)).toList(),
-        ),
-        Column(
-          spacing: 16,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            timeTables
-                .map((timeTable) => timeTable.days.length)
-                .maxOrNull
-                .toStringOrDash,
-            timeTables
-                .map((timeTable) => timeTable.weekDaysDiff.sum)
-                .maxOrNull
-                .toStringOrDash,
-            (timeTables
-                    .map((timeTable) => timeTable.maxDayEnd)
-                    .maxOrNull
-                    ?.format(context))
-                .toStringOrDash,
-            ((durationInMinutes) => durationInMinutes == null
-                ? "-"
-                : Duration(minutes: durationInMinutes).format())(
-              timeTables
-                  .map((timeTable) => timeTable.maxDayDurationInMinutes)
-                  .maxOrNull,
-            ),
-          ].map((text) => TitleText(text)).toList(),
-        ),
-      ],
-    ),
+    showData: (timeTables) {
+      final durationInMinutes = timeTables
+          .map((timeTable) => timeTable.maxDayDurationInMinutes)
+          .maxOrNull;
+
+      return Row(
+        spacing: 16,
+        children: [
+          Column(
+            spacing: 16,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              "Days:",
+              "Week Days Diff:",
+              "Min Start Time",
+              "Max End Time:",
+              "Max Day Duration:",
+            ].map((text) => TitleText(text)).toList(),
+          ),
+          Column(
+            spacing: 16,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children:
+                [
+                      timeTables
+                          .map((timeTable) => timeTable.days.length)
+                          .maxOrNull,
+                      timeTables
+                          .map((timeTable) => timeTable.weekDaysDiff.sum)
+                          .maxOrNull,
+                      timeTables
+                          .map((timeTable) => timeTable.minDayStart)
+                          .minOrNull
+                          ?.format(context),
+                      timeTables
+                          .map((timeTable) => timeTable.maxDayEnd)
+                          .maxOrNull
+                          ?.format(context),
+                      durationInMinutes == null
+                          ? null
+                          : Duration(minutes: durationInMinutes).format(),
+                    ]
+                    .map((textOrNull) => TitleText(textOrNull.toStringOrDash))
+                    .toList(),
+          ),
+        ],
+      );
+    },
   );
 }
 
@@ -184,12 +195,14 @@ class _CourseSearchState extends ConsumerState<CoursesSearch> {
 
   @override
   Widget build(BuildContext context) => Center(
-    child: AsyncValueBuilder(
-      asyncValue: ref.watch(allSectionsProvider),
-      showData: (allSections) => SearchAnchor.bar(
+    child: MkFutureBuilder(
+      future: ref.watch(
+        allSectionsProvider.selectAsync((allSections) => allSections.keys),
+      ),
+      showData: (allCourseCodes) => SearchAnchor.bar(
         barHintText: 'Search courses',
         searchController: controller,
-        suggestionsBuilder: (context, controller) => allSections.keys
+        suggestionsBuilder: (context, controller) => allCourseCodes
             .searchFor(controller.text)
             .take(10)
             .map(

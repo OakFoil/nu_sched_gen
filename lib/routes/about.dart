@@ -1,4 +1,3 @@
-import 'package:common/common.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_icons/simple_icons.dart';
@@ -18,21 +17,26 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        DisplayText("Made By OakFoil"),
-        IconButton(
-          onPressed: () async {
-            if (!await launchUrl(
-              Uri.parse("https://github.com/OakFoil/nu_sched_gen"),
-            )) {
-              throw Exception("Could not launch URL");
-            }
-          },
-          icon: Icon(SimpleIcons.github, size: 24 * 2),
-        ),
-      ],
+    child: Text.rich(
+      style: Theme.of(context).textTheme.displayMedium,
+      TextSpan(
+        children: [
+          TextSpan(text: "Made By OakFoil"),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: IconButton(
+              onPressed: () async {
+                if (!await launchUrl(
+                  Uri.parse("https://github.com/OakFoil/nu_sched_gen"),
+                )) {
+                  throw Exception("Could not launch URL");
+                }
+              },
+              icon: Icon(SimpleIcons.github, size: 24 * 2),
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }

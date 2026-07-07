@@ -12,7 +12,7 @@ EditDistanceCache _editDistanceCache = HashMap();
 extension StringUtils on String {
   String get last => this[length - 1];
 
-  String get allButLast => split("").take(length - 1).join();
+  String get allButLast => substring(0, length - 1);
 
   num _editDistanceNotCached(
     String str,
