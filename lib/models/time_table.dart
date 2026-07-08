@@ -45,34 +45,17 @@ sealed class TimeTable extends ConflictsWith<TimeTable> with _$TimeTable {
   TimeTable mergeWith(TimeTable timeTable) =>
       TimeTable(sections.followedBy(timeTable.sections));
 
-  static Iterable<TimeTable> allPossibleTimeTables({
-    required Map<String, Set<Section>> sectionsPerCourseCode,
-    Set<Section> registeredSections = const {},
-  }) {
-    final openSectionsPerCourseCode = sectionsPerCourseCode
-        .map(
-          (courseCode, courseCodeSections) => MapEntry(
-            courseCode,
-            courseCodeSections
-                .where((section) => section.seatsLeft > 0)
-                .followedBy(
-                  registeredSections.where(
-                    (registeredSection) =>
-                        registeredSection.courseCode == courseCode,
-                  ),
-                ),
-          ),
-        )
-        .values;
-
-    if (openSectionsPerCourseCode.isEmpty ||
-        openSectionsPerCourseCode.any(
+  static Iterable<TimeTable> allPossibleTimeTables(
+    Set<Set<Section>> avilableSectionsPerCourseCode,
+  ) {
+    if (avilableSectionsPerCourseCode.isEmpty ||
+        avilableSectionsPerCourseCode.any(
           (courseCodeSections) => courseCodeSections.isEmpty,
         )) {
       return {};
     }
 
-    final possibleTimeTablesPerCourseCode = openSectionsPerCourseCode.map(
+    final possibleTimeTablesPerCourseCode = avilableSectionsPerCourseCode.map(
       (courseCodeSections) =>
           courseCodeSections.map((section) => TimeTable({section})),
     );

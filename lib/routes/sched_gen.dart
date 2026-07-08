@@ -5,6 +5,7 @@ import 'package:nu_sched_gen/models/time_table.dart';
 import 'package:nu_sched_gen/services/courses_cart.dart';
 import 'package:nu_sched_gen/services/optimizations.dart';
 import 'package:nu_sched_gen/services/repositories/all_sections.dart';
+import 'package:nu_sched_gen/services/avilable_sections.dart';
 import 'package:nu_sched_gen/services/time_tables.dart';
 import 'package:nu_sched_gen/search.dart';
 import 'package:common/common.dart';
@@ -244,22 +245,33 @@ class CoursePreview extends ConsumerWidget {
   const CoursePreview({super.key, required this.courseCode, this.onTap});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => ListTile(
-    title: TitleText(courseCode),
-    onTap: onTap,
-    trailing:
-        ref.watch(
-          coursesCartProvider.select(
-            (coursesCart) => coursesCart.contains(courseCode),
-          ),
-        )
-        ? IconButton(
-            onPressed: () {
-              ref.read(coursesCartProvider.notifier).removeCourse(courseCode);
-            },
-            icon: const Icon(Icons.highlight_remove),
+  Widget build(BuildContext context, WidgetRef ref) => MkFutureBuilder(
+    future: ref.watch(
+      avilableSectionsProvider.selectAsync(
+        (avilableSections) => avilableSections.keys.contains(courseCode),
+      ),
+    ),
+    showData: (isAvilable) => ListTile(
+      title: TitleText(courseCode),
+      onTap: isAvilable
+          ? onTap
+          : null, // prevent adding a course if it isn't avilable
+      trailing:
+          ref.watch(
+            coursesCartProvider.select(
+              (coursesCart) => coursesCart.contains(courseCode),
+            ),
           )
-        : const SizedBox.shrink(),
+          ? IconButton(
+              onPressed: () {
+                ref.read(coursesCartProvider.notifier).removeCourse(courseCode);
+              },
+              icon: const Icon(Icons.highlight_remove),
+            )
+          : isAvilable
+          ? const SizedBox.shrink()
+          : TitleText("Full"),
+    ),
   );
 }
 
