@@ -3,9 +3,8 @@
 	"tasks": [
 		{
 			"type": "flutter",
-			"command": "flutter",
+			"command": "dart",
 			"args": [
-				"pub",
 				"run",
 				"build_runner",
 				"watch",
@@ -15,7 +14,7 @@
 				"$dart-build_runner"
 			],
 			"group": "build",
-			"label": "flutter: flutter pub run build_runner watch",
+			"label": "flutter: dart run build_runner watch",
 			"detail": "",
 			"presentation": {
 				"reveal": "silent"
