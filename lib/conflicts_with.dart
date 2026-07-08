@@ -1,9 +1,8 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:nu_sched_gen/models/schedule.dart';
 
 @immutable
-abstract class ConflictsWith<T> extends Equatable {
+abstract class ConflictsWith<T> {
   const ConflictsWith();
 
   Iterable<Schedule> get schedules;

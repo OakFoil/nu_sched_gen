@@ -1,21 +1,21 @@
 import 'dart:collection';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:nu_sched_gen/conflicts_with.dart';
 import 'package:nu_sched_gen/models/slot.dart';
 
-@immutable
-class Section extends ConflictsWith<Section> {
-  final Slot lecture;
-  final Slot? tutorial, lab;
+part 'section.freezed.dart';
 
+@freezed
+sealed class Section extends ConflictsWith<Section> with _$Section {
   @override
   get schedules => slots.map((slot) => slot.schedules).flattened;
-  @override
-  List<Object?> get props => [lecture, tutorial, lab];
 
-  const Section({required this.lecture, this.tutorial, this.lab});
+  const Section._();
+
+  const factory Section({required Slot lecture, Slot? tutorial, Slot? lab}) =
+      SectionData;
 
   Iterable<Slot> get slots => {lecture, tutorial, lab}.nonNulls;
   String get courseCode => lecture.courseCode;

@@ -1,19 +1,20 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:nu_sched_gen/conflicts_with.dart';
 import 'package:nu_sched_gen/models/section.dart';
 import 'package:nu_sched_gen/utils.dart';
 
-@immutable
-class TimeTable extends ConflictsWith<TimeTable> {
-  final Iterable<Section> sections;
+part 'time_table.freezed.dart';
 
+@freezed
+sealed class TimeTable extends ConflictsWith<TimeTable> with _$TimeTable {
   @override
   get schedules => sections.map((section) => section.schedules).flattened;
-  @override
-  List<Object?> get props => [sections];
 
-  const TimeTable(this.sections);
+  const TimeTable._();
+
+  const factory TimeTable(Iterable<Section> sections) = TimeTableData;
 
   Set<int> get days => schedules.map((schedule) => schedule.day).toSet();
   Set<int> get weekDaysDiff {

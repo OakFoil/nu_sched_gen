@@ -1,43 +1,37 @@
-import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:json_annotation/json_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
+part 'schedule.freezed.dart';
 part 'schedule.g.dart';
 
-@JsonSerializable()
-@immutable
-class Schedule extends Equatable implements Comparable<Schedule> {
-  @JsonKey(name: "roomId")
-  final String room;
-  @JsonKey(
-    name: "scheduledStartTime",
-    fromJson: timeListToTimeOfDay,
-    includeToJson: false,
-  )
-  final TimeOfDay start;
-  @JsonKey(
-    name: "scheduledEndTime",
-    fromJson: timeListToTimeOfDay,
-    includeToJson: false,
-  )
-  final TimeOfDay end;
-  @JsonKey(name: "scheduledDays", fromJson: daysListToDay)
-  final int day;
-
+@freezed
+sealed class Schedule with _$Schedule implements Comparable<Schedule> {
   Set<Schedule> get schedules => {this};
-  @override
-  List<Object?> get props => [room, start, end, day];
 
-  const Schedule({
-    required this.room,
-    required this.start,
-    required this.end,
-    required this.day,
-  });
+  const Schedule._();
+
+  const factory Schedule({
+    @JsonKey(name: "roomId") required String room,
+    @JsonKey(
+      name: "scheduledStartTime",
+      fromJson: Schedule
+          .timeListToTimeOfDay, // have to add Schedule. so generated code also adds Schedule.
+      includeToJson: false,
+    )
+    required TimeOfDay start,
+    @JsonKey(
+      name: "scheduledEndTime",
+      fromJson: Schedule.timeListToTimeOfDay,
+      includeToJson: false,
+    )
+    required TimeOfDay end,
+    @JsonKey(name: "scheduledDays", fromJson: Schedule.daysListToDay)
+    required int day,
+  }) = ScheduleData;
 
   factory Schedule.fromJson(Map<String, dynamic> json) =>
       _$ScheduleFromJson(json);
-  Map<String, dynamic> toJson() => _$ScheduleToJson(this);
 
   static TimeOfDay timeListToTimeOfDay(List<dynamic> value) {
     final [hour, minute, _] = value;
