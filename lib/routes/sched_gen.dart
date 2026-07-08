@@ -16,7 +16,7 @@ import 'package:nu_sched_gen/utils.dart';
 part 'sched_gen.g.dart';
 
 @TypedGoRoute<SchedGenRoute>(path: "/")
-class SchedGenRoute extends GoRouteData with _$SchedGenRoute {
+class SchedGenRoute extends GoRouteData with $SchedGenRoute {
   const SchedGenRoute();
 
   @override

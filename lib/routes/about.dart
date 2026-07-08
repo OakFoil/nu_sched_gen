@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 part 'about.g.dart';
 
 @TypedGoRoute<AboutRoute>(path: "/about")
-class AboutRoute extends GoRouteData with _$AboutRoute {
+class AboutRoute extends GoRouteData with $AboutRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const AboutScreen();
