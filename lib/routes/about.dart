@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:simple_icons/simple_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 part 'about.g.dart';
@@ -32,7 +32,15 @@ class AboutScreen extends StatelessWidget {
                   throw Exception("Could not launch URL");
                 }
               },
-              icon: Icon(SimpleIcons.github, size: 24 * 2),
+              icon: SvgPicture.asset(
+                'assets/github.svg',
+                width: 24 * 2,
+                height: 24 * 2,
+                colorFilter: ColorFilter.mode(
+                  Theme.of(context).colorScheme.onSurface,
+                  BlendMode.srcIn,
+                ),
+              ),
             ),
           ),
         ],

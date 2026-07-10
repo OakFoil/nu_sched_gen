@@ -11,6 +11,7 @@ class TimeTables extends _$TimeTables {
   @override
   Future<Set<TimeTable>> build() async {
     final coursesCart = ref.watch(coursesCartProvider);
+    if (coursesCart.isEmpty) return {};
     final avilableSections = Map.of(
       await ref.watch(avilableSectionsProvider.future),
     );

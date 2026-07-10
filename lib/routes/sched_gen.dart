@@ -38,48 +38,45 @@ class SchedGenScreen extends ConsumerWidget {
       ),
     );
 
-    return AsyncValueBuilder(
-      asyncValue: ref.watch(timeTablesProvider),
-      showData: (timeTables) => CustomScrollView(
-        slivers: [
-          SliverList.list(
-            children:
-                const [
-                  Center(child: DisplayText("Generate Schedule")),
-                  CoursesSearch(),
-                ] +
-                coursesPreviews +
-                [
-                  Divider(),
-                  ListTile(
-                    contentPadding: EdgeInsets.only(right: 16),
-                    title: Text.rich(
-                      TextSpan(
-                        style: Theme.of(context).textTheme.headlineMedium,
-                        children: const [
-                          TextSpan(text: "Optimizations Order (Drag "),
-                          WidgetSpan(
-                            alignment: PlaceholderAlignment.middle,
-                            child: Icon(Icons.drag_handle),
-                          ),
-                          TextSpan(text: " to reorder)"),
-                        ],
-                      ),
-                    ),
-                    trailing: IconButton(
-                      onPressed: () {
-                        ref.invalidate(optimizationsProvider);
-                      },
-                      icon: Icon(Icons.replay),
+    return CustomScrollView(
+      slivers: [
+        SliverList.list(
+          children:
+              const [
+                Center(child: DisplayText("Generate Schedule")),
+                CoursesSearch(),
+              ] +
+              coursesPreviews +
+              [
+                const Divider(),
+                ListTile(
+                  contentPadding: const EdgeInsets.only(right: 16),
+                  title: Text.rich(
+                    TextSpan(
+                      style: Theme.of(context).textTheme.headlineMedium,
+                      children: const [
+                        TextSpan(text: "Optimizations Order (Drag "),
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Icon(Icons.drag_handle),
+                        ),
+                        TextSpan(text: " to reorder)"),
+                      ],
                     ),
                   ),
-                ],
-          ),
-          TimeTablesOptimizations(),
-          SliverList.list(children: [Divider(), TimeTablesStats(), Divider()]),
-          TimeTablesList(timeTables),
-        ],
-      ),
+                  trailing: IconButton(
+                    onPressed: () {
+                      ref.invalidate(optimizationsProvider);
+                    },
+                    icon: const Icon(Icons.replay),
+                  ),
+                ),
+              ],
+        ),
+        const TimeTablesOptimizations(),
+        SliverList.list(children: [Divider(), TimeTablesStats(), Divider()]),
+        const TimeTablesList(),
+      ],
     );
   }
 }
@@ -110,20 +107,23 @@ class TimeTablesOptimizations extends ConsumerWidget {
 }
 
 // Cannot add AsyncValueBuilder to it since when loading a prograss bar is displayed which breaks sliver rendering
-class TimeTablesList extends StatelessWidget {
-  final Set<TimeTable> timeTables;
-  const TimeTablesList(this.timeTables, {super.key});
+class TimeTablesList extends ConsumerWidget {
+  const TimeTablesList({super.key});
 
   @override
-  Widget build(BuildContext context) => SliverPrototypeExtentList(
-    prototypeItem: timeTables.isEmpty
-        ? SizedBox.shrink()
-        : TimeTablePreview(timeTables.first),
-    delegate: SliverChildBuilderDelegate((context, index) {
-      final timeTable = timeTables.elementAtOrNull(index);
+  Widget build(BuildContext context, WidgetRef ref) => AsyncValueBuilder(
+    asSliver: true,
+    asyncValue: ref.watch(timeTablesProvider),
+    showData: (timeTables) => SliverPrototypeExtentList(
+      prototypeItem: timeTables.isEmpty
+          ? const SizedBox.shrink()
+          : TimeTablePreview(timeTables.first),
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final timeTable = timeTables.elementAtOrNull(index);
 
-      return timeTable == null ? null : TimeTablePreview(timeTable);
-    }, childCount: timeTables.length),
+        return timeTable == null ? null : TimeTablePreview(timeTable);
+      }, childCount: timeTables.length),
+    ),
   );
 }
 
@@ -251,27 +251,30 @@ class CoursePreview extends ConsumerWidget {
         (avilableSections) => avilableSections.keys.contains(courseCode),
       ),
     ),
-    showData: (isAvilable) => ListTile(
-      title: TitleText(courseCode),
-      onTap: isAvilable
-          ? onTap
-          : null, // prevent adding a course if it isn't avilable
-      trailing:
-          ref.watch(
-            coursesCartProvider.select(
-              (coursesCart) => coursesCart.contains(courseCode),
-            ),
-          )
-          ? IconButton(
-              onPressed: () {
-                ref.read(coursesCartProvider.notifier).removeCourse(courseCode);
-              },
-              icon: const Icon(Icons.highlight_remove),
-            )
-          : isAvilable
-          ? const SizedBox.shrink()
-          : TitleText("Full"),
-    ),
+    showData: (isAvilable) {
+      final isInCart = ref.watch(
+        coursesCartProvider.select(
+          (coursesCart) => coursesCart.contains(courseCode),
+        ),
+      );
+
+      return ListTile(
+        title: TitleText(courseCode),
+        onTap: isAvilable && !isInCart ? onTap : null,
+        trailing: isInCart
+            ? IconButton(
+                onPressed: () {
+                  ref
+                      .read(coursesCartProvider.notifier)
+                      .removeCourse(courseCode);
+                },
+                icon: const Icon(Icons.highlight_remove),
+              )
+            : isAvilable
+            ? const SizedBox.shrink()
+            : const TitleText("Full"),
+      );
+    },
   );
 }
 
