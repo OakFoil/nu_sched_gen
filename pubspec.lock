@@ -169,13 +169,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
-  common:
+  common_flutter:
     dependency: "direct main"
     description:
       path: "."
       ref: HEAD
-      resolved-ref: ab8ad81f53185ecf316b01e5eab81c668c8162de
-      url: "https://github.com/OakFoil/common"
+      resolved-ref: "40d09e9bd3dfa01ee848404613d6d1345d9df24d"
+      url: "https://github.com/OakFoil/common_flutter"
     source: git
     version: "0.0.1"
   convert:
