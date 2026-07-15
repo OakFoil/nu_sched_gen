@@ -174,7 +174,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "40d09e9bd3dfa01ee848404613d6d1345d9df24d"
+      resolved-ref: dc41b3a67a5a307cdcdf8baffbe0322688735719
       url: "https://github.com/OakFoil/common_flutter"
     source: git
     version: "0.0.1"
