@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart';
 import 'package:infinityfree_bypasser/infinityfree_bypasser.dart';
 import 'package:nu_sched_gen/models/section.dart';
@@ -13,7 +14,9 @@ final InfinityfreeBypasser _bypasser = InfinityfreeBypasser();
 class AllSections extends _$AllSections {
   @override
   Future<Map<String, Set<Section>>> build() async {
-    const url = "https://sched-gen.rf.gd/api";
+    const backendUrl = "https://nu-courses.rf.gd",
+        corsFixUrl = "https://everyorigin.jwvbremen.nl/api/get?url=$backendUrl",
+        url = kIsWeb ? corsFixUrl : backendUrl;
 
     await _bypasser.bypass(url);
 
