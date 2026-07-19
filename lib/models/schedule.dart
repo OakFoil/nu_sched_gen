@@ -156,14 +156,17 @@ extension IterableScheduleUtils on Iterable<Schedule> {
       any((a) => any((b) => a != b && a.conflictsWith(b)));
 
   Map<String, Schedule> get allRooms {
+    final today = DateTime.now().weekday;
     final mockTime = TimeOfDay(hour: 23, minute: 59);
     final Set<String> seenRooms = {};
 
     return {
       for (final schedule in this)
-        if (schedule.room.isNotEmpty && seenRooms.add(schedule.room))
+        if (schedule.room.isNotEmpty &&
+            schedule.day != today &&
+            seenRooms.add(schedule.room))
           schedule.room: schedule.copyWith(
-            day: DateTime.now().weekday,
+            day: today,
             start: mockTime,
             end: mockTime,
           ),
@@ -172,16 +175,18 @@ extension IterableScheduleUtils on Iterable<Schedule> {
 
   Map<Building, Map<String?, Map<String, List<Schedule>>>> get findStudyRooms {
     final date = DateTime.now(), time = TimeOfDay.fromDateTime(date);
-    final schedules =
-        where(
-              (schedule) =>
-                  schedule.room.isNotEmpty &&
-                  schedule.day == date.weekday &&
-                  !(schedule.end.compareTo(time) == -1),
-            )
-            .followedBy(allRooms.values)
-            .sortedBy((schedule) => schedule.start)
-            .reversed;
+    final schedulesToday = where(
+      (schedule) =>
+          schedule.room.isNotEmpty &&
+          schedule.day == date.weekday &&
+          !(schedule.end.compareTo(time) == -1),
+    ).sortedBy((schedule) => schedule.start).reversed;
+    final schedules = schedulesToday.followedBy(
+      allRooms.values.where(
+        (schedule) =>
+            !schedule.map((schedule) => schedule.room).contains(schedule.room),
+      ),
+    );
     final schedulesPerBuilding = schedules.groupListsBy(
       (schedule) => schedule.building,
     );
