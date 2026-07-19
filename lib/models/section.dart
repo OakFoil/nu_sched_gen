@@ -67,4 +67,24 @@ sealed class Section extends ConflictsWith<Section> with _$Section {
 
     return sections.groupSetsBy((section) => section.courseCode);
   }
+
+  static Map<String, Set<Section>> avilableSectionsPerCourseCode(
+    Map<String, Set<Section>> allSections, [
+    Set<Section> registeredSections = const {},
+  ]) {
+    final avilableSections = Map.of(allSections);
+    avilableSections.updateAll(
+      (courseCode, sections) => sections
+          .where((section) => section.seatsLeft > 0)
+          .followedBy(
+            registeredSections.where(
+              (registeredSection) => registeredSection.courseCode == courseCode,
+            ),
+          )
+          .toSet(),
+    );
+    avilableSections.removeWhere((courseCode, sections) => sections.isEmpty);
+
+    return avilableSections;
+  }
 }

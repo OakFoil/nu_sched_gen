@@ -5,13 +5,8 @@ extension NullUtils<T> on T? {
 }
 
 extension DurationUtils on Duration {
-  String format() {
-    final hours = inHours;
-    final minutes = inMinutes.remainder(60);
-
-    return '${hours.toString().padLeft(2, '0')}:'
-        '${minutes.toString().padLeft(2, '0')}';
-  }
+  String get format =>
+      '${inHours.toString().padLeft(2, '0')}:${inMinutes.remainder(60).toString().padLeft(2, '0')}';
 }
 
 extension TimeOfDayUtils on TimeOfDay {

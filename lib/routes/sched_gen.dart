@@ -172,7 +172,7 @@ class TimeTablesStats extends ConsumerWidget {
                           ?.format(context),
                       durationInMinutes == null
                           ? null
-                          : Duration(minutes: durationInMinutes).format(),
+                          : Duration(minutes: durationInMinutes).format,
                     ]
                     .map((textOrNull) => TitleText(textOrNull.toStringOrDash))
                     .toList(),

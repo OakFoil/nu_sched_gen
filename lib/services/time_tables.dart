@@ -7,27 +7,20 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'time_tables.g.dart';
 
 @Riverpod(keepAlive: true)
-class TimeTables extends _$TimeTables {
-  @override
-  Future<Set<TimeTable>> build() async {
-    final coursesCart = ref.watch(coursesCartProvider);
-    if (coursesCart.isEmpty) return {};
-    final avilableSections = Map.of(
-      await ref.watch(avilableSectionsProvider.future),
-    );
-    avilableSections.removeWhere(
-      (courseCode, sections) => !coursesCart.contains(courseCode),
-    );
-    final timeTables = TimeTable.allPossibleTimeTables(
-      avilableSections.values.toSet(),
-    ).toSet();
+Future<Set<TimeTable>> timeTables(Ref ref) async {
+  final coursesCart = ref.watch(coursesCartProvider);
+  if (coursesCart.isEmpty) return {};
+  final avilableSections = Map.of(
+    await ref.watch(avilableSectionsProvider.future),
+  );
+  avilableSections.removeWhere(
+    (courseCode, sections) => !coursesCart.contains(courseCode),
+  );
+  final timeTables = TimeTable.allPossibleTimeTables(
+    avilableSections.values.toSet(),
+  ).toSet();
 
-    final optimizations = ref.watch(optimizationsProvider);
-    final Iterable<TimeTable> optimizedTimeTables = optimizations.fold(
-      timeTables,
-      (accOptimizedTimeTables, f) => f.apply(accOptimizedTimeTables),
-    );
+  final optimizations = ref.watch(optimizationsProvider);
 
-    return optimizedTimeTables.toSet();
-  }
+  return timeTables.applyOptimizations(optimizations).toSet();
 }

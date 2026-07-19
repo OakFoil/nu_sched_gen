@@ -1,4 +1,5 @@
 import 'package:nu_sched_gen/routes/about.dart';
+import 'package:nu_sched_gen/routes/find_study_rooms.dart';
 import 'package:nu_sched_gen/routes/sched_gen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
@@ -29,6 +30,10 @@ class _PageState extends State<Page> {
           icon: Icon(Icons.calendar_month),
           label: "Generate Schedule",
         ),
+        NavigationDestination(
+          icon: Icon(Icons.meeting_room),
+          label: "Find Study Rooms",
+        ),
         NavigationDestination(icon: Icon(Icons.info), label: "About"),
       ],
       selectedIndex: selectedIndex,
@@ -40,7 +45,7 @@ class _PageState extends State<Page> {
   );
 }
 
-List<String> indexToPath = ["/", "/about"];
+List<String> indexToPath = ["/", "/find-study-rooms", "/about"];
 Map<String, int> pathToIndex = {
   for (final (index, page) in indexToPath.indexed) page: index,
 };
@@ -50,7 +55,7 @@ var routerConfig = GoRouter(
     ShellRoute(
       navigatorKey: navigatorKey,
       builder: (context, state, child) => Page(child: child),
-      routes: [$schedGenRoute, $aboutRoute],
+      routes: [$schedGenRoute, $findStudyRoomsRoute, $aboutRoute],
     ),
   ],
 );

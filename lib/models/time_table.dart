@@ -2,6 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:nu_sched_gen/conflicts_with.dart';
+import 'package:nu_sched_gen/models/optimization.dart';
 import 'package:nu_sched_gen/models/section.dart';
 import 'package:nu_sched_gen/utils.dart';
 
@@ -78,4 +79,13 @@ sealed class TimeTable extends ConflictsWith<TimeTable> with _$TimeTable {
 
     return allPossibleTimeTables;
   }
+}
+
+extension IterableTimeTableUtils on Iterable<TimeTable> {
+  Iterable<TimeTable> applyOptimizations(
+    List<Optimization<dynamic>> optimizations,
+  ) => optimizations.fold(
+    this,
+    (accOptimizedTimeTables, f) => f.apply(accOptimizedTimeTables),
+  );
 }
