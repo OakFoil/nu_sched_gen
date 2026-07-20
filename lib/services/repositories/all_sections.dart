@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart';
 import 'package:infinityfree_bypasser/infinityfree_bypasser.dart';
 import 'package:nu_sched_gen/models/section.dart';
@@ -12,9 +11,7 @@ final InfinityfreeBypasser _bypasser = InfinityfreeBypasser();
 
 @Riverpod(keepAlive: true)
 Future<Map<String, Set<Section>>> allSections(Ref ref) async {
-  const backendUrl = "https://nu-courses.rf.gd",
-      corsFixUrl = "https://cors.eu.org/$backendUrl",
-      url = kIsWeb ? corsFixUrl : backendUrl;
+  const url = "https://sched-gen.rf.gd/api";
 
   await _bypasser.bypass(url);
 

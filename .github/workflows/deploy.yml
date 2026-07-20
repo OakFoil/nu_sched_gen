@@ -40,3 +40,8 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./build/web/
           server-dir: htdocs/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            api/**
