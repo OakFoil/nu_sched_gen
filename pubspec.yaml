@@ -42,6 +42,9 @@ dependencies:
   common_flutter:
     git:
       url: https://github.com/OakFoil/common_flutter
+  infinityfree_bypasser:
+    git:
+      url: https://github.com/tharushaudana/infinityfree-dio-bypass-flutter
   flutter_riverpod: ^3.3.2
   riverpod_annotation: ^4.0.3
   url_launcher: ^6.3.2

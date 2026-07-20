@@ -87,9 +87,11 @@ class RoomPreview extends StatelessWidget {
   const RoomPreview(this.room, this.schedules, {super.key});
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    title: HeadlineText(room),
-    trailing: TitleText("Empty until ${schedules.first.start.format(context)}"),
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(child: HeadlineText(room)),
+      TitleText("Empty until ${schedules.first.start.format(context)}"),
+    ],
   );
 }
 
