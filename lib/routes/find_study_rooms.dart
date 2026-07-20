@@ -88,9 +88,14 @@ class RoomPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
-      Expanded(child: HeadlineText(room)),
-      TitleText("Empty until ${schedules.first.start.format(context)}"),
+      HeadlineText(room),
+      Flexible(
+        child: TitleText(
+          "Empty until ${schedules.first.start.format(context)}",
+        ),
+      ),
     ],
   );
 }
