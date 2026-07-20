@@ -8,7 +8,7 @@ part 'all_sections.g.dart';
 
 @Riverpod(keepAlive: true)
 Future<Map<String, Set<Section>>> allSections(Ref ref) async {
-  const url = "https://sched-gen.rf.gd/api";
+  const url = "https://sched-gen.rf.gd/api/";
 
   final Response(:body) = await get(Uri.parse(url));
   final List<dynamic> data = json.decode(body)["data"];
