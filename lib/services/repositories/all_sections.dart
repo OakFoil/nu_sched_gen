@@ -13,7 +13,7 @@ final InfinityfreeBypasser _bypasser = InfinityfreeBypasser();
 @Riverpod(keepAlive: true)
 Future<Map<String, Set<Section>>> allSections(Ref ref) async {
   const backendUrl = "https://nu-courses.rf.gd",
-      corsFixUrl = "https://everyorigin.jwvbremen.nl/api/get?url=$backendUrl",
+      corsFixUrl = "https://cors.eu.org/$backendUrl",
       url = kIsWeb ? corsFixUrl : backendUrl;
 
   await _bypasser.bypass(url);
