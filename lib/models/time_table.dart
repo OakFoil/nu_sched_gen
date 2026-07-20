@@ -11,7 +11,7 @@ part 'time_table.freezed.dart';
 @freezed
 sealed class TimeTable extends ConflictsWith<TimeTable> with _$TimeTable {
   @override
-  get schedules => sections.map((section) => section.schedules).flattened;
+  get schedules => sections.expand((section) => section.schedules);
 
   const TimeTable._();
 
@@ -31,20 +31,18 @@ sealed class TimeTable extends ConflictsWith<TimeTable> with _$TimeTable {
 
   TimeOfDay get maxDayEnd => schedules.map((schedule) => schedule.end).max;
   TimeOfDay get minDayStart => schedules.map((schedule) => schedule.start).min;
-  int get maxDayDurationInMinutes =>
-      groupBy(schedules, (schedule) => schedule.day)
-          .map(
-            (day, schedules) => MapEntry(
-              day,
-              schedules.map((schedule) => schedule.end).max.toMinute -
-                  schedules.map((schedule) => schedule.start).min.toMinute,
-            ),
-          )
-          .values
-          .max;
+  int get maxDayDurationInMinutes => schedules
+      .groupListsBy((schedule) => schedule.day)
+      .values
+      .map(
+        (schedules) =>
+            schedules.map((schedule) => schedule.end).max.toMinute -
+            schedules.map((schedule) => schedule.start).min.toMinute,
+      )
+      .max;
 
-  TimeTable mergeWith(TimeTable timeTable) =>
-      TimeTable(sections.followedBy(timeTable.sections));
+  TimeTable mergeWith(TimeTable other) =>
+      TimeTable(sections.followedBy(other.sections));
 
   static Iterable<TimeTable> allPossibleTimeTables(
     Set<Set<Section>> avilableSectionsPerCourseCode,
@@ -62,13 +60,11 @@ sealed class TimeTable extends ConflictsWith<TimeTable> with _$TimeTable {
     );
 
     final allPossibleTimeTables = possibleTimeTablesPerCourseCode.reduce(
-      (accTimeTables, timeTables) => accTimeTables
-          .map(
-            (accTimeTable) => timeTables
-                .whereNot((timeTable) => accTimeTable.conflictsWith(timeTable))
-                .map((timeTable) => accTimeTable.mergeWith(timeTable)),
-          )
-          .flattened,
+      (accTimeTables, timeTables) => accTimeTables.expand(
+        (accTimeTable) => timeTables
+            .whereNot(accTimeTable.conflictsWith)
+            .map(accTimeTable.mergeWith),
+      ),
     );
 
     assert(

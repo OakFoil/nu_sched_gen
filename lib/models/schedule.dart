@@ -17,7 +17,7 @@ enum Building {
   String toString() => ["Tarek Khalil", "Main"][index];
 }
 
-@freezed
+@Freezed(toJson: false)
 sealed class Schedule extends ConflictsWith<Schedule>
     with _$Schedule
     implements Comparable<Schedule> {
@@ -25,15 +25,10 @@ sealed class Schedule extends ConflictsWith<Schedule>
   Set<Schedule> get schedules => {this};
 
   @override
-  bool conflictsWith(Schedule other) {
-    final Schedule(day: day1, start: start1, end: end1) = this;
-    final Schedule(day: day2, start: start2, end: end2) = other;
-
-    if (day1 != day2) return false;
-    if (start1.compareTo(end2) >= 0) return false;
-    if (start2.compareTo(end1) >= 0) return false;
-    return true;
-  }
+  bool conflictsWith(Schedule other) =>
+      day == other.day &&
+      start.compareTo(other.end) < 0 &&
+      other.start.compareTo(end) < 0;
 
   @override
   int compareTo(Schedule other) {
@@ -43,12 +38,11 @@ sealed class Schedule extends ConflictsWith<Schedule>
     final startComparison = start.compareTo(other.start);
     final endComparison = end.compareTo(other.end);
 
-    final comparisons = [dayComparison, startComparison, endComparison];
-
-    return comparisons.firstWhere(
-      (comparison) => comparison != 0,
-      orElse: () => 0,
-    );
+    return [
+      dayComparison,
+      startComparison,
+      endComparison,
+    ].firstWhere((comparison) => comparison != 0, orElse: () => 0);
   }
 
   const Schedule._();
@@ -60,16 +54,12 @@ sealed class Schedule extends ConflictsWith<Schedule>
     @JsonKey(name: "roomId") required String room,
     @JsonKey(
       name: "scheduledStartTime",
-      fromJson: Schedule
-          .timeListToTimeOfDay, // have to add Schedule. so generated code also adds Schedule.
-      includeToJson: false,
+      fromJson:
+          Schedule // have to add Schedule. so generated code also adds Schedule.
+              .timeListToTimeOfDay,
     )
     required TimeOfDay start,
-    @JsonKey(
-      name: "scheduledEndTime",
-      fromJson: Schedule.timeListToTimeOfDay,
-      includeToJson: false,
-    )
+    @JsonKey(name: "scheduledEndTime", fromJson: Schedule.timeListToTimeOfDay)
     required TimeOfDay end,
     @JsonKey(name: "scheduledDays", fromJson: Schedule.daysListToDay)
     required int day,
@@ -99,10 +89,10 @@ sealed class Schedule extends ConflictsWith<Schedule>
   }
 
   static int daysListToDay(List<dynamic> value) {
-    var [a] = value;
-    if (a == 0) a = 7; // Sunday
+    var [day] = value;
+    if (day == 0) day = 7; // Sunday
 
-    return a;
+    return day;
   }
 
   int get duration => end.toMinute - start.toMinute;
@@ -115,9 +105,8 @@ sealed class Schedule extends ConflictsWith<Schedule>
       if (RegExp(r'[A-Z]').hasMatch(room[0])) {
         return _floorNameToFloor[room[0]]!;
       }
-      final firstDigit = double.tryParse(room);
-      if (firstDigit != null) {
-        return (firstDigit / 100).toInt() - 1;
+      if (double.tryParse(room) case final number?) {
+        return (number / 100).toInt() - 1;
       }
     }
 
@@ -173,41 +162,32 @@ extension IterableScheduleUtils on Iterable<Schedule> {
     };
   }
 
-  Map<Building, Map<String?, Map<String, List<Schedule>>>> get findStudyRooms {
+  Map<Building, Map<String, Map<String, List<Schedule>>>> get findStudyRooms {
     final date = DateTime.now(), time = TimeOfDay.fromDateTime(date);
     final schedulesToday = where(
       (schedule) =>
           schedule.room.isNotEmpty &&
           schedule.day == date.weekday &&
           !(schedule.end.compareTo(time) == -1),
-    ).sortedBy((schedule) => schedule.start).reversed;
-    final schedules = schedulesToday.followedBy(
-      allRooms.values.where(
-        (schedule) =>
-            !schedule.map((schedule) => schedule.room).contains(schedule.room),
-      ),
     );
-    final schedulesPerBuilding = schedules.groupListsBy(
-      (schedule) => schedule.building,
+    final schedulesTodayRooms = schedulesToday.map(
+      (scheduleToday) => scheduleToday.room,
     );
-    final schedulesPerFloorPerBuilding = schedulesPerBuilding.map(
-      (building, schedules) => MapEntry(
-        building,
-        schedules.groupListsBy((schedule) => schedule.floorName),
-      ),
-    );
-    final schedulesPerRoomPerFloorPerBuilding = schedulesPerFloorPerBuilding
-        .map(
-          (building, schedulesPerFloor) => MapEntry(
-            building,
-            schedulesPerFloor.map(
-              (floor, schedules) => MapEntry(
-                floor,
-                schedules.groupListsBy((schedule) => schedule.room),
-              ),
-            ),
-          ),
-        );
+    final schedules = allRooms.values
+        .where((schedule) => !schedulesTodayRooms.contains(schedule.room))
+        .followedBy(schedulesToday)
+        .sortedBy((schedule) => schedule.start)
+        .reversed;
+    final Map<Building, Map<String, Map<String, List<Schedule>>>>
+    schedulesPerRoomPerFloorPerBuilding = {};
+
+    for (final schedule in schedules) {
+      schedulesPerRoomPerFloorPerBuilding
+          .putIfAbsent(schedule.building, () => {})
+          .putIfAbsent(schedule.floorName, () => {})
+          .putIfAbsent(schedule.room, () => [])
+          .add(schedule);
+    }
 
     return schedulesPerRoomPerFloorPerBuilding;
   }

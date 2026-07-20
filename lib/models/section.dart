@@ -10,7 +10,7 @@ part 'section.freezed.dart';
 @freezed
 sealed class Section extends ConflictsWith<Section> with _$Section {
   @override
-  get schedules => slots.map((slot) => slot.schedules).flattened;
+  get schedules => slots.expand((slot) => slot.schedules);
 
   const Section._();
 
@@ -30,45 +30,38 @@ sealed class Section extends ConflictsWith<Section> with _$Section {
     assert(lecture.type == SlotType.Lecture);
 
     final matchingSlots = lecture.matchingSlots(slots);
-    final tutorials = matchingSlots.where((a) => a.type == SlotType.Tutorial);
-    final labs = matchingSlots.where((a) => a.type == SlotType.Lab);
+    final tutorials = matchingSlots.where(
+      (slot) => slot.type == SlotType.Tutorial,
+    );
+    final labs = matchingSlots.where((slot) => slot.type == SlotType.Lab);
 
-    if (tutorials.isEmpty && labs.isEmpty) {
-      return {Section(lecture: lecture)};
-    } else if (tutorials.isNotEmpty && labs.isEmpty) {
-      return tutorials.map(
-        (tutotial) => Section(lecture: lecture, tutorial: tutotial),
-      );
-    } else if (tutorials.isEmpty && labs.isNotEmpty) {
-      return labs.map((lab) => Section(lecture: lecture, lab: lab));
-    } else {
-      return tutorials
-          .map(
-            (tutorial) => labs.map(
-              (lab) => Section(lecture: lecture, tutorial: tutorial, lab: lab),
-            ),
-          )
-          .flattened;
-    }
+    return switch ((tutorials.isEmpty, labs.isEmpty)) {
+      (true, true) => {Section(lecture: lecture)},
+      (false, true) => tutorials.map(
+        (tutortial) => Section(lecture: lecture, tutorial: tutortial),
+      ),
+      (true, false) => labs.map((lab) => Section(lecture: lecture, lab: lab)),
+      (false, false) => tutorials.expand(
+        (tutorial) => labs.map(
+          (lab) => Section(lecture: lecture, tutorial: tutorial, lab: lab),
+        ),
+      ),
+    };
   }
 
   static Set<Section> allSections(Set<Slot> slots) {
     final lectures = slots.where((a) => a.type == SlotType.Lecture);
 
     return lectures
-        .map((lecture) => allPossibleSectionsForLecture(lecture, slots))
-        .flattened
+        .expand((lecture) => allPossibleSectionsForLecture(lecture, slots))
         .whereNot((section) => section.containsConflicts)
         .toSet();
   }
 
-  static Map<String, Set<Section>> allSectionsPerCourseCode(Set<Slot> slots) {
-    final sections = allSections(slots);
+  static Map<String, Set<Section>> allSectionsPerCourseCode(Set<Slot> slots) =>
+      allSections(slots).groupSetsBy((section) => section.courseCode);
 
-    return sections.groupSetsBy((section) => section.courseCode);
-  }
-
-  static Map<String, Set<Section>> avilableSectionsPerCourseCode(
+  static Map<String, Set<Section>> availableSectionsPerCourseCode(
     Map<String, Set<Section>> allSections, [
     Set<Section> registeredSections = const {},
   ]) {

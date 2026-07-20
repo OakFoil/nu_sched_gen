@@ -24,8 +24,7 @@ class FindStudyRoomsScreen extends ConsumerWidget {
     future: ref.watch(
       allSectionsProvider.selectAsync(
         (allSections) => allSections.values.flattened
-            .map((section) => section.schedules)
-            .flattened
+            .expand((section) => section.schedules)
             .findStudyRooms,
       ),
     ),

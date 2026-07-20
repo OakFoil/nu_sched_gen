@@ -10,7 +10,7 @@ Future<Map<String, Set<Section>>> avilableSections(Ref ref) async {
   final registeredSections = ref.watch(registeredSectionsProvider);
   final allSectionsPerCourseCode = await ref.watch(allSectionsProvider.future);
 
-  return Section.avilableSectionsPerCourseCode(
+  return Section.availableSectionsPerCourseCode(
     allSectionsPerCourseCode,
     registeredSections,
   );

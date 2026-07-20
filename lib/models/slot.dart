@@ -9,7 +9,7 @@ part 'slot.g.dart';
 // ignore: constant_identifier_names
 enum SlotType { Lecture, Tutorial, Lab, Practical, Project, Thesis }
 
-@freezed
+@Freezed(toJson: false)
 sealed class Slot extends ConflictsWith<Slot> with _$Slot {
   const Slot._();
 
@@ -17,8 +17,9 @@ sealed class Slot extends ConflictsWith<Slot> with _$Slot {
     @JsonKey(name: "eventSubType") required SlotType type,
     @JsonKey(name: "eventId") required String courseCode,
     @JsonKey(
-      fromJson: Slot
-          .instructorsToListOfString, // have to add Slot. so generated code also adds Slot.
+      fromJson:
+          Slot // have to add Slot. so generated code also adds Slot.
+              .instructorsToListOfString,
     )
     required Set<String> instructors,
     @JsonKey(fromJson: Slot.nullSchedulesToEmptySchedules)
