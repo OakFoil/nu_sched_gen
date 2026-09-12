@@ -11,7 +11,8 @@ part 'schedule.g.dart';
 
 enum Building {
   tarekKhalil,
-  main;
+  main,
+  online;
 
   @override
   String toString() => ["Tarek Khalil", "Main"][index];
@@ -49,7 +50,7 @@ sealed class Schedule extends ConflictsWith<Schedule>
 
   const factory Schedule({
     @JsonKey(name: "bldgName", fromJson: Schedule.bldgNameToBuilding)
-    required Building building,
+    required Building? building,
     @JsonKey(name: "floorId") required String? floorId,
     @JsonKey(name: "roomId") required String room,
     @JsonKey(
@@ -68,8 +69,11 @@ sealed class Schedule extends ConflictsWith<Schedule>
   factory Schedule.fromJson(Map<String, dynamic> json) =>
       _$ScheduleFromJson(json);
 
-  static Building bldgNameToBuilding(String bldgName) =>
-      Building.values[int.parse(bldgName.last) - 1];
+  static Building? bldgNameToBuilding(String bldgName) => switch (bldgName) {
+    "" => null,
+    "Online" => Building.online,
+    _ => Building.values[int.parse(bldgName.last)],
+  };
 
   static final Map<String, int> _floorNameToFloor = {
     for (final (index, value) in ["B", "G", "F", "S", "R"].indexed)
@@ -162,7 +166,7 @@ extension IterableScheduleUtils on Iterable<Schedule> {
     };
   }
 
-  Map<Building, Map<String, Map<String, List<Schedule>>>> get findStudyRooms {
+  Map<Building?, Map<String, Map<String, List<Schedule>>>> get findStudyRooms {
     final date = DateTime.now(), time = TimeOfDay.fromDateTime(date);
     final schedulesToday = where(
       (schedule) =>
@@ -178,7 +182,7 @@ extension IterableScheduleUtils on Iterable<Schedule> {
         .followedBy(schedulesToday)
         .sortedBy((schedule) => schedule.start)
         .reversed;
-    final Map<Building, Map<String, Map<String, List<Schedule>>>>
+    final Map<Building?, Map<String, Map<String, List<Schedule>>>>
     schedulesPerRoomPerFloorPerBuilding = {};
 
     for (final schedule in schedules) {

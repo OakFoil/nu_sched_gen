@@ -41,7 +41,7 @@ class FindStudyRoomsScreen extends ConsumerWidget {
 }
 
 class BuildingPreview extends StatelessWidget {
-  final Building building;
+  final Building? building;
   final Map<String?, Map<String, List<Schedule>>> floors;
 
   const BuildingPreview(this.building, this.floors, {super.key});
