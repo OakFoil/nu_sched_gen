@@ -16,11 +16,6 @@ class Optimizations extends _$Optimizations {
         (timeTable) => timeTable.weekDaysDiff.sum,
       ),
       Optimization(
-        "Max End Time",
-        MinOrMax.min,
-        (timeTable) => timeTable.maxDayEnd,
-      ),
-      Optimization(
         "Days Durations Sum",
         MinOrMax.min,
         (timeTable) => timeTable.daysDurationsInMinutes.sum,
@@ -29,6 +24,16 @@ class Optimizations extends _$Optimizations {
         "Max Day Duration",
         MinOrMax.min,
         (timeTable) => timeTable.daysDurationsInMinutes.max,
+      ),
+      Optimization(
+        "Max End Time",
+        MinOrMax.min,
+        (timeTable) => timeTable.maxDayEnd,
+      ),
+      Optimization(
+        "Min Start Time",
+        MinOrMax.max,
+        (timeTable) => timeTable.minDayStart,
       ),
     ];
   }
