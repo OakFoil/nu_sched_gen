@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart';
 import 'package:infinityfree_bypasser/infinityfree_bypasser.dart';
 import 'package:nu_sched_gen/models/section.dart';
@@ -12,16 +13,24 @@ final InfinityfreeBypasser _bypasser = InfinityfreeBypasser();
 
 @Riverpod(keepAlive: true)
 Future<Map<String, Set<Section>>> allSections(Ref ref) async {
+  final body = await (kDebugMode
+      ? rootBundle.loadString("assets/json.json")
+      : fetchJson());
+  final List<dynamic> data = json.decode(body)["data"];
+  final Set<Slot> slots = data.map((a) => Slot.fromJson(a)).toSet();
+
+  return Section.allSectionsPerCourseCode(slots);
+}
+
+Future<String> fetchJson() async {
   const url = "https://sched-gen.rf.gd/api";
 
   final Response(:body) = await get(
     Uri.parse(url),
     headers: kIsWeb ? null : {'Cookie': await getCookie(url)},
   );
-  final List<dynamic> data = json.decode(body)["data"];
-  final Set<Slot> slots = data.map((a) => Slot.fromJson(a)).toSet();
 
-  return Section.allSectionsPerCourseCode(slots);
+  return body;
 }
 
 Future<String> getCookie(String url) async {

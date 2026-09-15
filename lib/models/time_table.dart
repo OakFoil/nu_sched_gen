@@ -18,28 +18,23 @@ sealed class TimeTable extends ConflictsWith<TimeTable> with _$TimeTable {
   const factory TimeTable(Iterable<Section> sections) = TimeTableData;
 
   Set<int> get days => schedules.map((schedule) => schedule.day).toSet();
-  Set<int> get weekDaysDiff {
-    final List<int> weekDays = {
-      for (var i = 1; i <= 7; i++) i,
-    }.difference(days).toList()..sort();
+  Set<int> get weekDays =>
+      {for (var day = 1; day <= 7; day++) day}.difference(days);
+  List<int> get weekDaysDiff {
+    final List<int> weekDaysSorted = weekDays.toList()..sort();
 
-    return {
-      for (var i = 0; i < weekDays.length - 1; i++)
-        weekDays[i + 1] - weekDays[i],
-    };
+    return [
+      for (var i = 0; i < weekDaysSorted.length - 1; i++)
+        weekDaysSorted[i + 1] - weekDaysSorted[i] - 1,
+    ];
   }
 
   TimeOfDay get maxDayEnd => schedules.map((schedule) => schedule.end).max;
   TimeOfDay get minDayStart => schedules.map((schedule) => schedule.start).min;
-  int get maxDayDurationInMinutes => schedules
+  Iterable<int> get daysDurationsInMinutes => schedules
       .groupListsBy((schedule) => schedule.day)
       .values
-      .map(
-        (schedules) =>
-            schedules.map((schedule) => schedule.end).max.toMinute -
-            schedules.map((schedule) => schedule.start).min.toMinute,
-      )
-      .max;
+      .map((schedules) => maxDayEnd.toMinute - minDayStart.toMinute);
 
   TimeTable mergeWith(TimeTable other) =>
       TimeTable(sections.followedBy(other.sections));
@@ -82,6 +77,7 @@ extension IterableTimeTableUtils on Iterable<TimeTable> {
     List<Optimization<dynamic>> optimizations,
   ) => optimizations.fold(
     this,
-    (accOptimizedTimeTables, f) => f.apply(accOptimizedTimeTables),
+    (accOptimizedTimeTables, optimization) =>
+        optimization.apply(accOptimizedTimeTables),
   );
 }

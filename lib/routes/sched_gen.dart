@@ -133,8 +133,11 @@ class TimeTablesStats extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => AsyncValueBuilder(
     asyncValue: ref.watch(timeTablesProvider),
     showData: (timeTables) {
-      final durationInMinutes = timeTables
-          .map((timeTable) => timeTable.maxDayDurationInMinutes)
+      final maxDayDurationInMinutes = timeTables
+          .map((timeTable) => timeTable.daysDurationsInMinutes.max)
+          .maxOrNull;
+      final daysDurationsSumInMinutes = timeTables
+          .map((timeTable) => timeTable.daysDurationsInMinutes.sum)
           .maxOrNull;
 
       return Row(
@@ -148,6 +151,7 @@ class TimeTablesStats extends ConsumerWidget {
               "Week Days Diff:",
               "Min Start Time",
               "Max End Time:",
+              "Days Durations Sum",
               "Max Day Duration:",
             ].map((text) => TitleText(text)).toList(),
           ),
@@ -170,9 +174,12 @@ class TimeTablesStats extends ConsumerWidget {
                           .map((timeTable) => timeTable.maxDayEnd)
                           .maxOrNull
                           ?.format(context),
-                      durationInMinutes == null
+                      daysDurationsSumInMinutes == null
                           ? null
-                          : Duration(minutes: durationInMinutes).format,
+                          : Duration(minutes: daysDurationsSumInMinutes).format,
+                      maxDayDurationInMinutes == null
+                          ? null
+                          : Duration(minutes: maxDayDurationInMinutes).format,
                     ]
                     .map((textOrNull) => TitleText(textOrNull.toStringOrDash))
                     .toList(),
