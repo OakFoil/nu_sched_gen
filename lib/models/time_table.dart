@@ -34,7 +34,11 @@ sealed class TimeTable extends ConflictsWith<TimeTable> with _$TimeTable {
   Iterable<int> get daysDurationsInMinutes => schedules
       .groupListsBy((schedule) => schedule.day)
       .values
-      .map((schedules) => maxDayEnd.toMinute - minDayStart.toMinute);
+      .map(
+        (schedulesPerDay) =>
+            schedulesPerDay.map((schedule) => schedule.end).max.toMinute -
+            schedulesPerDay.map((schedule) => schedule.start).min.toMinute,
+      );
 
   TimeTable mergeWith(TimeTable other) =>
       TimeTable(sections.followedBy(other.sections));
