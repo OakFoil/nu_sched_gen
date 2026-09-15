@@ -14,20 +14,22 @@ final InfinityfreeBypasser _bypasser = InfinityfreeBypasser();
 Future<Map<String, Set<Section>>> allSections(Ref ref) async {
   const url = "https://sched-gen.rf.gd/api";
 
-  if (!kIsWeb) {
-    await _bypasser.bypass(url);
-
-    if (_bypasser.cookie == null) {
-      return Future.error("InfinityFree Bot Check Bypass Failed");
-    }
-  }
-
   final Response(:body) = await get(
     Uri.parse(url),
-    headers: kIsWeb ? null : {'Cookie': _bypasser.cookie!},
+    headers: kIsWeb ? null : {'Cookie': await getCookie(url)},
   );
   final List<dynamic> data = json.decode(body)["data"];
   final Set<Slot> slots = data.map((a) => Slot.fromJson(a)).toSet();
 
   return Section.allSectionsPerCourseCode(slots);
+}
+
+Future<String> getCookie(String url) async {
+  await _bypasser.bypass(url);
+
+  if (_bypasser.cookie == null) {
+    return Future.error("InfinityFree Bot Check Bypass Failed");
+  }
+
+  return _bypasser.cookie!;
 }
