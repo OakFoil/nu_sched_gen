@@ -15,7 +15,7 @@ enum Building {
   online;
 
   @override
-  String toString() => ["Tarek Khalil", "Main"][index];
+  String toString() => ["Tarek Khalil", "Main", "Onlilne"][index];
 }
 
 @Freezed(toJson: false)
@@ -72,7 +72,7 @@ sealed class Schedule extends ConflictsWith<Schedule>
   static Building? bldgNameToBuilding(String bldgName) => switch (bldgName) {
     "" => null,
     "Online" => Building.online,
-    _ => Building.values[int.parse(bldgName.last)],
+    _ => Building.values[int.parse(bldgName.last) - 1],
   };
 
   static final Map<String, int> _floorNameToFloor = {
@@ -101,11 +101,12 @@ sealed class Schedule extends ConflictsWith<Schedule>
 
   int get duration => end.toMinute - start.toMinute;
 
-  int get floor {
+  int? get floor {
     if (floorId != null && floorId!.isNotEmpty) {
       return _floorNameToFloor[floorId![0]]!;
     }
     if (room.isNotEmpty) {
+      if (room == "Online") return null;
       if (RegExp(r'[A-Z]').hasMatch(room[0])) {
         return _floorNameToFloor[room[0]]!;
       }
@@ -119,7 +120,7 @@ sealed class Schedule extends ConflictsWith<Schedule>
 
   String get floorName =>
       building == Building.main ||
-          building == Building.tarekKhalil && floor <= 0
+          building == Building.tarekKhalil && floor != null && floor! <= 0
       ? _floorToFloorName[floor]!
       : floor.toString();
 }
