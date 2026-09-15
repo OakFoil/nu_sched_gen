@@ -9,20 +9,20 @@ class Optimizations extends _$Optimizations {
   @override
   List<Optimization<dynamic>> build() {
     return [
-      Optimization("Days", (a) => a.min, (timeTable) => timeTable.days.length),
+      Optimization("Days", MinOrMax.max, (timeTable) => timeTable.days.length),
       Optimization(
         "Week Days Diff",
-        (a) => a.min,
+        MinOrMax.min,
         (timeTable) => timeTable.weekDaysDiff.sum,
       ),
       Optimization(
         "Max End Time",
-        (a) => a.min,
+        MinOrMax.min,
         (timeTable) => timeTable.maxDayEnd,
       ),
       Optimization(
         "Max Day Duration",
-        (a) => a.min,
+        MinOrMax.min,
         (timeTable) => timeTable.maxDayDurationInMinutes,
       ),
     ];

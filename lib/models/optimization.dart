@@ -1,8 +1,11 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:nu_sched_gen/models/time_table.dart';
 
 part 'optimization.freezed.dart';
+
+enum MinOrMax { min, max }
 
 @freezed
 sealed class Optimization<T extends Comparable<T>> with _$Optimization<T> {
@@ -10,9 +13,14 @@ sealed class Optimization<T extends Comparable<T>> with _$Optimization<T> {
 
   const factory Optimization(
     String name,
-    T Function(Iterable<T>) minOrMax,
+    MinOrMax minOrMax,
     T Function(TimeTable) getValueToOptimize,
   ) = OptimizationData;
+
+  T applyMinOrMax(Iterable<T> valuesToOptimize) => switch (minOrMax) {
+    MinOrMax.min => valuesToOptimize.min,
+    MinOrMax.max => valuesToOptimize.max,
+  };
 
   Iterable<TimeTable> apply(Iterable<TimeTable> timeTables) {
     if (timeTables.isEmpty) return timeTables;
@@ -20,7 +28,7 @@ sealed class Optimization<T extends Comparable<T>> with _$Optimization<T> {
     final annotatedTimeTables = timeTables.map(
       (timeTable) => (timeTable, getValueToOptimize(timeTable)),
     );
-    final optimizedValue = minOrMax(
+    final optimizedValue = applyMinOrMax(
       annotatedTimeTables.map((annotatedTimeTable) => annotatedTimeTable.$2),
     );
 
