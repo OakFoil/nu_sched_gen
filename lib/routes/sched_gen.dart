@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:intl/intl.dart';
+import 'package:nu_sched_gen/models/optimization.dart';
 import 'package:nu_sched_gen/models/section.dart';
 import 'package:nu_sched_gen/models/time_table.dart';
 import 'package:nu_sched_gen/services/courses_cart.dart';
@@ -132,61 +133,30 @@ class TimeTablesStats extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => AsyncValueBuilder(
     asyncValue: ref.watch(timeTablesProvider),
-    showData: (timeTables) {
-      final maxDayDurationInMinutes = timeTables
-          .map((timeTable) => timeTable.daysDurationsInMinutes.max)
-          .maxOrNull;
-      final daysDurationsSumInMinutes = timeTables
-          .map((timeTable) => timeTable.daysDurationsInMinutes.sum)
-          .maxOrNull;
+    showData: (timeTables) => Table(
+      children:
+          [
+            Optimization.days,
+            Optimization.weekDaysDiff,
+            Optimization.daysDurationsSum,
+            Optimization.maxDayDuration,
+            Optimization.minStartTime,
+            Optimization.maxEndTime,
+          ].map((optimization) {
+            final str = switch (optimization.getWorst(timeTables)) {
+              Duration? value => value?.format,
+              TimeOfDay? value => value.format(context),
+              Object? value => value,
+            };
 
-      return Row(
-        spacing: 16,
-        children: [
-          Column(
-            spacing: 16,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              "Days:",
-              "Week Days Diff:",
-              "Min Start Time",
-              "Max End Time:",
-              "Days Durations Sum",
-              "Max Day Duration:",
-            ].map((text) => TitleText(text)).toList(),
-          ),
-          Column(
-            spacing: 16,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children:
-                [
-                      timeTables
-                          .map((timeTable) => timeTable.days.length)
-                          .maxOrNull,
-                      timeTables
-                          .map((timeTable) => timeTable.weekDaysDiff.sum)
-                          .maxOrNull,
-                      timeTables
-                          .map((timeTable) => timeTable.minDayStart)
-                          .minOrNull
-                          ?.format(context),
-                      timeTables
-                          .map((timeTable) => timeTable.maxDayEnd)
-                          .maxOrNull
-                          ?.format(context),
-                      daysDurationsSumInMinutes == null
-                          ? null
-                          : Duration(minutes: daysDurationsSumInMinutes).format,
-                      maxDayDurationInMinutes == null
-                          ? null
-                          : Duration(minutes: maxDayDurationInMinutes).format,
-                    ]
-                    .map((textOrNull) => TitleText(textOrNull.toStringOrDash))
-                    .toList(),
-          ),
-        ],
-      );
-    },
+            return TableRow(
+              children: [
+                TableCell(child: TitleText("${optimization.name}:")),
+                TableCell(child: TitleText(str.toStringOrDash)),
+              ],
+            );
+          }).toList(),
+    ),
   );
 }
 
