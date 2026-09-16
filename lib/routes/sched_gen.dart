@@ -106,7 +106,6 @@ class TimeTablesOptimizations extends ConsumerWidget {
   }
 }
 
-// Cannot add AsyncValueBuilder to it since when loading a prograss bar is displayed which breaks sliver rendering
 class TimeTablesList extends ConsumerWidget {
   const TimeTablesList({super.key});
 
