@@ -150,8 +150,8 @@ class TimeTablesStats extends ConsumerWidget {
 
             return TableRow(
               children: [
-                TableCell(child: TitleText("${optimization.name}:")),
-                TableCell(child: TitleText(str.toStringOrDash)),
+                TitleText("${optimization.name}:"),
+                TitleText(str.toStringOrDash),
               ],
             );
           }).toList(),
@@ -271,50 +271,30 @@ class SectionPreview extends StatelessWidget {
           spacing: 16,
           children: [
             TitleText(section.courseCode),
-            Row(
-              spacing: 16,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: 16,
-                  children: orderedSchedules
-                      .map(
-                        (schedule) => TitleText(
-                          DateFormat.EEEE().format(
-                            DateTime(1970, 0, schedule.timeSlot.day),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: 16,
-                  children: orderedSchedules
-                      .map(
-                        (schedule) =>
-                            TitleText(schedule.timeSlot.start.format(context)),
-                      )
-                      .toList(),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: 16,
-                  children: orderedSchedules
-                      .map(
-                        (schedule) =>
-                            TitleText(schedule.timeSlot.end.format(context)),
-                      )
-                      .toList(),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: 16,
-                  children: orderedSchedules
-                      .map((schedule) => TitleText(schedule.room))
-                      .toList(),
-                ),
-              ],
+            Table(
+              defaultColumnWidth: IntrinsicColumnWidth(),
+              children: orderedSchedules
+                  .map(
+                    (schedule) => TableRow(
+                      children:
+                          [
+                                DateFormat.EEEE().format(
+                                  DateTime(1970, 0, schedule.timeSlot.day),
+                                ),
+                                schedule.timeSlot.start.format(context),
+                                schedule.timeSlot.end.format(context),
+                                schedule.room,
+                              ]
+                              .map(
+                                (str) => Padding(
+                                  padding: EdgeInsetsGeometry.all(8),
+                                  child: TitleText(str),
+                                ),
+                              )
+                              .toList(),
+                    ),
+                  )
+                  .toList(),
             ),
             const Divider(),
             Row(
