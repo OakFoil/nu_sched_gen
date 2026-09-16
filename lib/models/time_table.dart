@@ -11,13 +11,13 @@ part 'time_table.freezed.dart';
 @freezed
 sealed class TimeTable extends ConflictsWith<TimeTable> with _$TimeTable {
   @override
-  get schedules => sections.expand((section) => section.schedules);
+  get timeSlots => sections.expand((section) => section.timeSlots);
 
   const TimeTable._();
 
   const factory TimeTable(Iterable<Section> sections) = TimeTableData;
 
-  Set<int> get days => schedules.map((schedule) => schedule.day).toSet();
+  Set<int> get days => timeSlots.map((schedule) => schedule.day).toSet();
   Set<int> get weekDays =>
       {for (var day = 1; day <= 7; day++) day}.difference(days);
   List<int> get weekDaysDiff {
@@ -29,9 +29,9 @@ sealed class TimeTable extends ConflictsWith<TimeTable> with _$TimeTable {
     ];
   }
 
-  TimeOfDay get maxDayEnd => schedules.map((schedule) => schedule.end).max;
-  TimeOfDay get minDayStart => schedules.map((schedule) => schedule.start).min;
-  Iterable<int> get daysDurationsInMinutes => schedules
+  TimeOfDay get maxDayEnd => timeSlots.map((schedule) => schedule.end).max;
+  TimeOfDay get minDayStart => timeSlots.map((schedule) => schedule.start).min;
+  Iterable<int> get daysDurationsInMinutes => timeSlots
       .groupListsBy((schedule) => schedule.day)
       .values
       .map(

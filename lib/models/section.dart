@@ -10,7 +10,7 @@ part 'section.freezed.dart';
 @freezed
 sealed class Section extends ConflictsWith<Section> with _$Section {
   @override
-  get schedules => slots.expand((slot) => slot.schedules);
+  get timeSlots => slots.expand((slot) => slot.timeSlots);
 
   const Section._();
 

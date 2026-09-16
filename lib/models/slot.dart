@@ -11,6 +11,9 @@ enum SlotType { Lecture, Tutorial, Lab, Practical, Project, Thesis }
 
 @Freezed(toJson: false)
 sealed class Slot extends ConflictsWith<Slot> with _$Slot {
+  @override
+  get timeSlots => schedules.expand((schedule) => schedule.timeSlots);
+
   const Slot._();
 
   const factory Slot({

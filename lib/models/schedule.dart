@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:nu_sched_gen/conflicts_with.dart';
+import 'package:nu_sched_gen/models/time_slot.dart';
 import 'package:nu_sched_gen/utils.dart';
 
 part 'schedule.freezed.dart';
@@ -23,51 +24,26 @@ sealed class Schedule extends ConflictsWith<Schedule>
     with _$Schedule
     implements Comparable<Schedule> {
   @override
-  Set<Schedule> get schedules => {this};
+  get timeSlots => {timeSlot};
 
   @override
-  bool conflictsWith(Schedule other) =>
-      day == other.day &&
-      start.compareTo(other.end) < 0 &&
-      other.start.compareTo(end) < 0;
-
-  @override
-  int compareTo(Schedule other) {
-    /* Days start with Monday = 1 and end with Sunday = 7
-    Make them start with Saturday = 0 and end with Friday = 6 */
-    final dayComparison = ((day + 1) % 7).compareTo((other.day + 1) % 7);
-    final startComparison = start.compareTo(other.start);
-    final endComparison = end.compareTo(other.end);
-
-    return [
-      dayComparison,
-      startComparison,
-      endComparison,
-    ].firstWhere((comparison) => comparison != 0, orElse: () => 0);
-  }
+  int compareTo(Schedule other) => timeSlot.compareTo(other.timeSlot);
 
   const Schedule._();
 
   const factory Schedule({
-    @JsonKey(name: "bldgName", fromJson: Schedule.bldgNameToBuilding)
     required Building? building,
-    @JsonKey(name: "floorId") required String? floorId,
-    @JsonKey(name: "roomId") required String room,
-    @JsonKey(
-      name: "scheduledStartTime",
-      fromJson:
-          Schedule // have to add Schedule. so generated code also adds Schedule.
-              .timeListToTimeOfDay,
-    )
-    required TimeOfDay start,
-    @JsonKey(name: "scheduledEndTime", fromJson: Schedule.timeListToTimeOfDay)
-    required TimeOfDay end,
-    @JsonKey(name: "scheduledDays", fromJson: Schedule.daysListToDay)
-    required int day,
+    required String? floorId,
+    required String room,
+    required TimeSlot timeSlot,
   }) = ScheduleData;
 
-  factory Schedule.fromJson(Map<String, dynamic> json) =>
-      _$ScheduleFromJson(json);
+  factory Schedule.fromJson(Map<String, dynamic> json) => Schedule(
+    building: Schedule.bldgNameToBuilding(json['bldgName']),
+    floorId: json['floorId'],
+    room: json['roomId'],
+    timeSlot: TimeSlot.fromJson(json),
+  );
 
   static Building? bldgNameToBuilding(String bldgName) => switch (bldgName) {
     "" => null,
@@ -86,20 +62,7 @@ sealed class Schedule extends ConflictsWith<Schedule>
       floor: floorName,
   };
 
-  static TimeOfDay timeListToTimeOfDay(List<dynamic> value) {
-    final [hour, minute, _] = value;
-
-    return TimeOfDay(hour: hour, minute: minute);
-  }
-
-  static int daysListToDay(List<dynamic> value) {
-    var [day] = value;
-    if (day == 0) day = 7; // Sunday
-
-    return day;
-  }
-
-  int get duration => end.toMinute - start.toMinute;
+  int get duration => timeSlot.end.toMinute - timeSlot.start.toMinute;
 
   int? get floor {
     if (floorId != null && floorId!.isNotEmpty) {
@@ -126,29 +89,6 @@ sealed class Schedule extends ConflictsWith<Schedule>
 }
 
 extension IterableScheduleUtils on Iterable<Schedule> {
-  bool get containsConflicts {
-    final schedules = [...this];
-
-    schedules.sort((scheduleA, scheduleB) {
-      final dayComparison = scheduleA.day.compareTo(scheduleB.day);
-      final startComparison = scheduleA.start.compareTo(scheduleB.start);
-
-      return dayComparison != 0 ? dayComparison : startComparison;
-    });
-
-    for (var i = 0; i < schedules.length - 1; i++) {
-      final current = schedules[i];
-      final next = schedules[i + 1];
-
-      if (current.day == next.day && current.conflictsWith(next)) return true;
-    }
-
-    return false;
-  }
-
-  bool get containsConflictsSlow =>
-      any((a) => any((b) => a != b && a.conflictsWith(b)));
-
   Map<String, Schedule> get allRooms {
     final today = DateTime.now().weekday;
     final mockTime = TimeOfDay(hour: 23, minute: 59);
@@ -157,12 +97,14 @@ extension IterableScheduleUtils on Iterable<Schedule> {
     return {
       for (final schedule in this)
         if (schedule.room.isNotEmpty &&
-            schedule.day != today &&
+            schedule.timeSlot.day != today &&
             seenRooms.add(schedule.room))
           schedule.room: schedule.copyWith(
-            day: today,
-            start: mockTime,
-            end: mockTime,
+            timeSlot: schedule.timeSlot.copyWith(
+              day: today,
+              start: mockTime,
+              end: mockTime,
+            ),
           ),
     };
   }
@@ -172,8 +114,8 @@ extension IterableScheduleUtils on Iterable<Schedule> {
     final schedulesToday = where(
       (schedule) =>
           schedule.room.isNotEmpty &&
-          schedule.day == date.weekday &&
-          !(schedule.end.compareTo(time) == -1),
+          schedule.timeSlot.day == date.weekday &&
+          !(schedule.timeSlot.end.compareTo(time) == -1),
     );
     final schedulesTodayRooms = schedulesToday.map(
       (scheduleToday) => scheduleToday.room,
@@ -181,7 +123,7 @@ extension IterableScheduleUtils on Iterable<Schedule> {
     final schedules = allRooms.values
         .where((schedule) => !schedulesTodayRooms.contains(schedule.room))
         .followedBy(schedulesToday)
-        .sortedBy((schedule) => schedule.start)
+        .sortedBy((schedule) => schedule.timeSlot.start)
         .reversed;
     final Map<Building?, Map<String, Map<String, List<Schedule>>>>
     schedulesPerRoomPerFloorPerBuilding = {};

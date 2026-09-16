@@ -260,7 +260,9 @@ class SectionPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final orderedSchedules = section.schedules.sorted();
+    final orderedSchedules = section.slots
+        .expand((slot) => slot.schedules)
+        .sorted();
 
     return Card.outlined(
       child: Padding(
@@ -279,7 +281,7 @@ class SectionPreview extends StatelessWidget {
                       .map(
                         (schedule) => TitleText(
                           DateFormat.EEEE().format(
-                            DateTime(1970, 0, schedule.day),
+                            DateTime(1970, 0, schedule.timeSlot.day),
                           ),
                         ),
                       )
@@ -290,7 +292,8 @@ class SectionPreview extends StatelessWidget {
                   spacing: 16,
                   children: orderedSchedules
                       .map(
-                        (schedule) => TitleText(schedule.start.format(context)),
+                        (schedule) =>
+                            TitleText(schedule.timeSlot.start.format(context)),
                       )
                       .toList(),
                 ),
@@ -299,7 +302,8 @@ class SectionPreview extends StatelessWidget {
                   spacing: 16,
                   children: orderedSchedules
                       .map(
-                        (schedule) => TitleText(schedule.end.format(context)),
+                        (schedule) =>
+                            TitleText(schedule.timeSlot.end.format(context)),
                       )
                       .toList(),
                 ),

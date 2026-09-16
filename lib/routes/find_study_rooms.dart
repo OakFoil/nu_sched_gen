@@ -3,6 +3,7 @@ import 'package:common_flutter/common.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nu_sched_gen/conflicts_with.dart';
 import 'package:nu_sched_gen/models/schedule.dart';
 import 'package:nu_sched_gen/services/repositories/all_sections.dart';
 import 'package:nu_sched_gen/utils.dart';
@@ -24,7 +25,7 @@ class FindStudyRoomsScreen extends ConsumerWidget {
     future: ref.watch(
       allSectionsProvider.selectAsync(
         (allSections) => allSections.values.flattened
-            .expand((section) => section.schedules)
+            .expand((section) => section.slots.expand((slot) => slot.schedules))
             .findStudyRooms,
       ),
     ),
@@ -93,7 +94,7 @@ class RoomPreview extends StatelessWidget {
       HeadlineText(room),
       Flexible(
         child: TitleText(
-          "Empty until ${schedules.first.start.format(context)}",
+          "Empty until ${schedules.first.timeSlot.start.format(context)}",
         ),
       ),
     ],
@@ -118,7 +119,7 @@ class Timeline extends StatelessWidget {
                   (schedule) => Positioned(
                     left:
                         constraints.maxWidth *
-                        (schedule.start.toMinute - a) /
+                        (schedule.timeSlot.start.toMinute - a) /
                         (b - a),
                     width: constraints.maxWidth * schedule.duration / (b - a),
                     child: ScheduleView(schedule),
@@ -139,12 +140,12 @@ class ScheduleView extends StatelessWidget {
     children: [
       Align(
         alignment: AlignmentGeometry.centerLeft,
-        child: TitleText(schedule.start.format(context)),
+        child: TitleText(schedule.timeSlot.start.format(context)),
       ),
       Container(height: 16 * 4, color: Colors.red),
       Align(
         alignment: AlignmentGeometry.centerRight,
-        child: TitleText(schedule.end.format(context)),
+        child: TitleText(schedule.timeSlot.end.format(context)),
       ),
     ],
   );
