@@ -35,46 +35,37 @@ class FindStudyRoomsScreen extends ConsumerWidget {
             Center(child: DisplayText("Find Study Rooms (EXPERIMENTAL)")),
           ] +
           studyRooms.entries
-              .map((entry) => BuildingPreview(entry.key, entry.value))
+              .map(
+                (entry) => ExpansionTilePreview(
+                  entry.key,
+                  entry.value,
+                  (building, floors) => ExpansionTilePreview(
+                    building,
+                    floors,
+                    (room, schedules) => RoomPreview(room, schedules),
+                  ),
+                ),
+              )
               .toList(),
     ),
   );
 }
 
-class BuildingPreview extends StatelessWidget {
-  final Building? building;
-  final Map<String?, Map<String, List<Schedule>>> floors;
+class ExpansionTilePreview<T, G> extends StatelessWidget {
+  final T? value;
+  final Map<String, G> subValues;
+  final Widget Function(String, G) f;
 
-  const BuildingPreview(this.building, this.floors, {super.key});
-
-  @override
-  Widget build(BuildContext context) => ExpansionTile(
-    title: HeadlineText(building.toString()),
-    children: floors.entries
-        .map(
-          (entry) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: FloorPreview(entry.key, entry.value),
-          ),
-        )
-        .toList(),
-  );
-}
-
-class FloorPreview extends StatelessWidget {
-  final String? floor;
-  final Map<String, List<Schedule>> rooms;
-
-  const FloorPreview(this.floor, this.rooms, {super.key});
+  const ExpansionTilePreview(this.value, this.subValues, this.f, {super.key});
 
   @override
   Widget build(BuildContext context) => ExpansionTile(
-    title: HeadlineText(floor.toString()),
-    children: rooms.entries
+    title: HeadlineText(value.toString()),
+    children: subValues.entries
         .map(
           (entry) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: RoomPreview(entry.key, entry.value),
+            padding: const EdgeInsetsGeometry.symmetric(horizontal: 16),
+            child: f(entry.key, entry.value),
           ),
         )
         .toList(),
